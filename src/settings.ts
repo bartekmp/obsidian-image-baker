@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: ImageBakerSettings = {
 	embedOnDrop: true,
 	deleteSourceFiles: true,
 	linkStyle: "wiki",
-	maxEmbedFileSizeKB: 0,
+	maxEmbedFileSizeKB: 1024,
 	optimizeImages: false,
 	optimizeFormat: "webp",
 	optimizeQuality: 75,

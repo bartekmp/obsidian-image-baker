@@ -78,7 +78,11 @@ describe("normalizeSettings", () => {
 	});
 
 	it("discards non-finite size limits", () => {
-		expect(normalizeSettings({ maxEmbedFileSizeKB: Infinity }).maxEmbedFileSizeKB).toBe(0);
-		expect(normalizeSettings({ maxEmbedFileSizeKB: NaN }).maxEmbedFileSizeKB).toBe(0);
+		expect(normalizeSettings({ maxEmbedFileSizeKB: Infinity }).maxEmbedFileSizeKB).toBe(1024);
+		expect(normalizeSettings({ maxEmbedFileSizeKB: NaN }).maxEmbedFileSizeKB).toBe(1024);
+	});
+
+	it("defaults the size limit to 1 MB", () => {
+		expect(DEFAULT_SETTINGS.maxEmbedFileSizeKB).toBe(1024);
 	});
 });

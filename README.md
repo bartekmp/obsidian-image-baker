@@ -59,7 +59,7 @@ note.
   | Embed images on paste | on | Bake pasted images straight into the note |
   | Embed images on drop | on | Bake dragged-in images straight into the note |
   | Delete source files after embedding | on | Trash the original file once baked in |
-  | Maximum file size to embed (KB) | 0 (no limit) | Skip images larger than this |
+  | Maximum file size to embed (KB) | 1024 | Skip images larger than this (0 = no limit) |
   | Optimize images before embedding | off | Re-encode images while baking them in |
   | Optimized format / quality / max width | WebP / 75 / 0 | Target encoding for optimization |
   | Extracted link style | Wikilink | `![[image.png]]` or `![](image.png)` |

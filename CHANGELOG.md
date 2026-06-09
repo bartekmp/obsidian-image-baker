@@ -31,7 +31,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   clicking an entry jumps the editor to that image.
 - Optional trashing of source files after embedding, guarded against files that are still
   referenced elsewhere.
-- Configurable maximum embed size, extracted link style, and event log level.
+- Configurable maximum embed size (default 1 MB, 0 disables the limit), extracted link
+  style, and event log level.
 
 [Unreleased]: https://github.com/bartekmp/obsidian-image-baker/compare/0.1.0...HEAD
 [0.1.0]: https://github.com/bartekmp/obsidian-image-baker/releases/tag/0.1.0

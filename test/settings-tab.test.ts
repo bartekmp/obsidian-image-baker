@@ -99,7 +99,7 @@ describe("ImageBakerSettingTab", () => {
 		await text?.__change("-3");
 		await text?.__change("abc");
 
-		expect(plugin.settings.maxEmbedFileSizeKB).toBe(0);
+		expect(plugin.settings.maxEmbedFileSizeKB).toBe(1024);
 		expect((plugin as unknown as MockPlugin).__getStoredData()).toBeNull();
 	});
 
