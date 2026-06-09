@@ -8,6 +8,9 @@ main.js
 # Test output
 coverage/
 
+# Packaged plugin bundles
+dist/
+
 # Obsidian plugin runtime data (per-vault settings)
 data.json
 
