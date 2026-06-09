@@ -15,6 +15,11 @@ note.
 
 - **Embed images** — convert wiki embeds (`![[photo.png|300]]`) and markdown images
   (`![alt](photo.png)`) into inline Base64 data URIs. No attachment file remains in the vault.
+- **Paste & drop baking** — paste a screenshot from the clipboard, or drag an image in from
+  another window or folder, and it is baked straight into the note — no attachment file is ever
+  created. Dropped files keep their real name; pasted screenshots get a clean
+  `<note name> <timestamp>.png` name. If a transfer contains anything that is not a supported
+  image within the size limit, Image Baker stands back and lets Obsidian handle it normally.
 - **Extract images** — convert inline Base64 embeds back into vault files. The original file name
   and display parameters (such as `|300` sizing) are restored from the embed; images without a
   recoverable name inherit the parent note's name (`My note image 1.png`).
@@ -38,6 +43,8 @@ note.
 
   | Setting | Default | Description |
   | --- | --- | --- |
+  | Embed images on paste | on | Bake pasted images straight into the note |
+  | Embed images on drop | on | Bake dragged-in images straight into the note |
   | Delete source files after embedding | on | Trash the original file once baked in |
   | Maximum file size to embed (KB) | 0 (no limit) | Skip images larger than this |
   | Extracted link style | Wikilink | `![[image.png]]` or `![](image.png)` |

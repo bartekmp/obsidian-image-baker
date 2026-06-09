@@ -23,6 +23,34 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
+			.setName("Embed images on paste")
+			.setDesc(
+				"Bake pasted images (e.g. screenshots) directly into the note instead of creating attachment files.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.embedOnPaste)
+					.onChange(async (value) => {
+						this.plugin.settings.embedOnPaste = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Embed images on drop")
+			.setDesc(
+				"Bake images dragged into the note directly into it instead of creating attachment files.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.embedOnDrop)
+					.onChange(async (value) => {
+						this.plugin.settings.embedOnDrop = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Delete source files after embedding")
 			.setDesc(
 				"Move the original image file to the trash once it is baked into a note. Files still referenced by other notes are always kept.",

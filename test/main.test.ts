@@ -51,6 +51,8 @@ describe("ImageBakerPlugin", () => {
 		]);
 		expect(mock.settingTabs).toHaveLength(1);
 		expect(app.workspaceHandlers.has("editor-menu")).toBe(true);
+		expect(app.workspaceHandlers.has("editor-paste")).toBe(true);
+		expect(app.workspaceHandlers.has("editor-drop")).toBe(true);
 		expect(Object.keys(mock.views)).toEqual([IMAGE_LIST_VIEW_TYPE]);
 		expect(mock.ribbonIcons.map((icon) => icon.icon)).toEqual(["images"]);
 	});
@@ -229,6 +231,98 @@ describe("ImageBakerPlugin", () => {
 		handler(menu, new FakeEditor("![[a.png]]", 2).asEditor(), asInfo(null));
 
 		expect(menu.items).toHaveLength(0);
+	});
+
+	function makeTransferEvent(
+		files: File[],
+		kind: "clipboardData" | "dataTransfer",
+	): { defaultPrevented: boolean; preventDefault: () => void } & Record<
+		string,
+		unknown
+	> {
+		const evt = {
+			defaultPrevented: false,
+			preventDefault(): void {
+				evt.defaultPrevented = true;
+			},
+			[kind]: { files },
+		};
+		return evt;
+	}
+
+	function fireTransfer(
+		event: "editor-paste" | "editor-drop",
+		evt: unknown,
+		editor: FakeEditor,
+		note: TFile,
+	): void {
+		const handler = app.workspaceHandlers.get(event) as (
+			...args: unknown[]
+		) => void;
+		handler(evt, editor.asEditor(), asInfo(note));
+	}
+
+	it("bakes a pasted screenshot directly into the note", async () => {
+		const note = app.vault.addNote("Trip.md", "");
+		const editor = new FakeEditor("");
+		const file = new File([sampleBytes(16)], "image.png", { type: "image/png" });
+		const evt = makeTransferEvent([file], "clipboardData");
+
+		fireTransfer("editor-paste", evt, editor, note);
+		await flushPromises();
+
+		expect(evt.defaultPrevented).toBe(true);
+		expect(editor.replaced).toHaveLength(1);
+		expect(editor.replaced[0]).toMatch(
+			/^!\[Trip \d{8}-\d{6}\.png\]\(data:image\/png;base64,/,
+		);
+		expect(MockNotice.messages).toEqual(["Embedded 1 image into the note."]);
+	});
+
+	it("keeps the original name of dropped image files", async () => {
+		const note = app.vault.addNote("Trip.md", "");
+		const editor = new FakeEditor("");
+		const file = new File([sampleBytes(16)], "diagram.png", { type: "image/png" });
+		const evt = makeTransferEvent([file], "dataTransfer");
+
+		fireTransfer("editor-drop", evt, editor, note);
+		await flushPromises();
+
+		expect(evt.defaultPrevented).toBe(true);
+		expect(editor.replaced[0]).toContain("![diagram.png](data:image/png;base64,");
+	});
+
+	it("leaves pasting to Obsidian when disabled in settings", async () => {
+		plugin.settings.embedOnPaste = false;
+		const note = app.vault.addNote("Trip.md", "");
+		const editor = new FakeEditor("");
+		const file = new File([sampleBytes(16)], "image.png", { type: "image/png" });
+		const evt = makeTransferEvent([file], "clipboardData");
+
+		fireTransfer("editor-paste", evt, editor, note);
+		await flushPromises();
+
+		expect(evt.defaultPrevented).toBe(false);
+		expect(editor.replaced).toHaveLength(0);
+	});
+
+	it("leaves non-image and oversized transfers to Obsidian", async () => {
+		plugin.settings.maxEmbedFileSizeKB = 1;
+		plugin.logger.setLevel("off");
+		const note = app.vault.addNote("Trip.md", "");
+		const editor = new FakeEditor("");
+		const pdf = new File([sampleBytes(8)], "doc.pdf", { type: "application/pdf" });
+		const big = new File([sampleBytes(2048)], "big.png", { type: "image/png" });
+
+		const pdfEvt = makeTransferEvent([pdf], "clipboardData");
+		fireTransfer("editor-paste", pdfEvt, editor, note);
+		const bigEvt = makeTransferEvent([big], "dataTransfer");
+		fireTransfer("editor-drop", bigEvt, editor, note);
+		await flushPromises();
+
+		expect(pdfEvt.defaultPrevented).toBe(false);
+		expect(bigEvt.defaultPrevented).toBe(false);
+		expect(editor.replaced).toHaveLength(0);
 	});
 
 	it("reports failures with a notice instead of throwing", async () => {

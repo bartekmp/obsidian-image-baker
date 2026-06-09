@@ -196,6 +196,7 @@ export class FakeApp {
 export class FakeEditor {
 	cursor: { line: number; ch: number } | null = null;
 	scrolledTo: unknown = null;
+	replaced: string[] = [];
 
 	constructor(
 		public content: string,
@@ -226,6 +227,10 @@ export class FakeEditor {
 		this.scrolledTo = range;
 	}
 
+	replaceSelection(text: string): void {
+		this.replaced.push(text);
+	}
+
 	asEditor(): Editor {
 		return this as unknown as Editor;
 	}
@@ -235,7 +240,7 @@ export function flushPromises(): Promise<void> {
 	return new Promise((resolve) => setImmediate(resolve));
 }
 
-export function sampleBytes(length: number): Uint8Array {
+export function sampleBytes(length: number): Uint8Array<ArrayBuffer> {
 	const bytes = new Uint8Array(length);
 	for (let i = 0; i < length; i++) {
 		bytes[i] = (i * 7 + 13) % 256;

@@ -17,12 +17,16 @@ describe("normalizeSettings", () => {
 	it("keeps valid persisted values", () => {
 		const settings = normalizeSettings({
 			logLevel: "debug",
+			embedOnPaste: false,
+			embedOnDrop: false,
 			deleteSourceFiles: false,
 			linkStyle: "markdown",
 			maxEmbedFileSizeKB: 512,
 		});
 		expect(settings).toEqual({
 			logLevel: "debug",
+			embedOnPaste: false,
+			embedOnDrop: false,
 			deleteSourceFiles: false,
 			linkStyle: "markdown",
 			maxEmbedFileSizeKB: 512,
@@ -39,6 +43,8 @@ describe("normalizeSettings", () => {
 	it("discards malformed values", () => {
 		const settings = normalizeSettings({
 			logLevel: "verbose",
+			embedOnPaste: "yes",
+			embedOnDrop: 1,
 			deleteSourceFiles: "yes",
 			linkStyle: "html",
 			maxEmbedFileSizeKB: -5,

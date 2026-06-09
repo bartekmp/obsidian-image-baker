@@ -13,6 +13,7 @@ import {
 	formatEmbedReport,
 	formatExtractReport,
 } from "./core/converter";
+import { buildTransferEmbeds, shouldEmbedTransfer } from "./core/transfer";
 import { Logger } from "./lib/logger";
 import {
 	findLinkAtOffset,
@@ -88,6 +89,30 @@ export default class ImageBakerPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, info) => {
 				this.populateEditorMenu(menu, editor, info);
+			}),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("editor-paste", (evt, editor, info) => {
+				this.handleTransfer(
+					evt,
+					evt.clipboardData,
+					editor,
+					info,
+					this.settings.embedOnPaste,
+				);
+			}),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("editor-drop", (evt, editor, info) => {
+				this.handleTransfer(
+					evt,
+					evt.dataTransfer,
+					editor,
+					info,
+					this.settings.embedOnDrop,
+				);
 			}),
 		);
 
@@ -193,6 +218,54 @@ export default class ImageBakerPlugin extends Plugin {
 					.setIcon("image-plus")
 					.onClick(() => void this.embedOne(file, link)),
 			);
+		}
+	}
+
+	private handleTransfer(
+		evt: ClipboardEvent | DragEvent,
+		data: DataTransfer | null,
+		editor: Editor,
+		info: MarkdownView | MarkdownFileInfo,
+		enabled: boolean,
+	): void {
+		if (!enabled || evt.defaultPrevented) {
+			return;
+		}
+		const note = info.file;
+		if (!note) {
+			return;
+		}
+		const files = Array.from(data?.files ?? []);
+		if (!shouldEmbedTransfer(files, this.settings)) {
+			if (files.length > 0) {
+				this.logger.info(
+					"Leaving transferred files to Obsidian (unsupported type or above the size limit)",
+				);
+			}
+			return;
+		}
+		evt.preventDefault();
+		void this.embedTransferred(files, editor, note);
+	}
+
+	private async embedTransferred(
+		files: File[],
+		editor: Editor,
+		note: TFile,
+	): Promise<void> {
+		try {
+			const markdown = await buildTransferEmbeds(files, note.basename);
+			editor.replaceSelection(markdown);
+			this.logger.debug(
+				`Embedded ${files.length} transferred image(s) into "${note.path}"`,
+			);
+			new Notice(
+				files.length === 1
+					? "Embedded 1 image into the note."
+					: `Embedded ${files.length} images into the note.`,
+			);
+		} catch (error) {
+			this.reportFailure("Failed to embed transferred images", error);
 		}
 	}
 

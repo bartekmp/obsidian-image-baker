@@ -31,11 +31,21 @@ describe("ImageBakerSettingTab", () => {
 
 	it("renders all settings", () => {
 		expect(MockSetting.instances.map((setting) => setting.name)).toEqual([
+			"Embed images on paste",
+			"Embed images on drop",
 			"Delete source files after embedding",
 			"Maximum file size to embed (KB)",
 			"Extracted link style",
 			"Log level",
 		]);
+	});
+
+	it("persists the paste and drop toggles", async () => {
+		await findSetting("Embed images on paste").toggles[0]?.__change(false);
+		await findSetting("Embed images on drop").toggles[0]?.__change(false);
+
+		expect(plugin.settings.embedOnPaste).toBe(false);
+		expect(plugin.settings.embedOnDrop).toBe(false);
 	});
 
 	it("persists the delete-source-files toggle", async () => {
