@@ -69,6 +69,17 @@ note.
 - Works on desktop and mobile. Like any plugin, it can be toggled on and off at any time under
   **Settings → Community plugins**.
 
+## Known limitations
+
+- **Bases / card views don't render baked images.** Obsidian's database-style views ignore
+  data-URI images. This is inherent to inlining images and applies to every plugin using this
+  approach; extract the image back to a file if you need it in a card view.
+- **Excalidraw and Canvas are out of scope.** Both store image references in JSON, not
+  markdown, so Image Baker does not touch `.canvas` or Excalidraw files.
+- **Mobile paste is untested.** The paste/drop handling uses only the cross-platform editor
+  events (no Electron-specific APIs), but it has not yet been verified on a phone or tablet.
+  Embedding, extracting, and batch conversion are platform-neutral.
+
 ## A note on embedded image size
 
 Base64 encoding makes notes roughly 33 % larger than the original image file, and very large

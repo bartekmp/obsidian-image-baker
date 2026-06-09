@@ -26,7 +26,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   deriving one from the parent note.
 - Command palette commands: embed/extract all images in the current note, embed/extract the
   image under the cursor.
-- Editor context menu actions on image links and embeds.
+- Editor context menu actions on image links and embeds, and an "Extract image to file"
+  context menu on rendered images in reading view.
 - Image list sidebar view (ribbon button and command) showing every image of the active note;
   clicking an entry jumps the editor to that image.
 - Optional trashing of source files after embedding, guarded against files that are still
