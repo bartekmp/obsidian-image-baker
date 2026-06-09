@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"minAppVersion": "1.6.0",
 	"description": "Bake images into your notes as self-contained Base64 embeds, and extract them back into vault files at any time.",
-	"author": "bartoslaff",
-	"authorUrl": "https://github.com/bartoslaff",
+	"author": "bartekmp",
+	"authorUrl": "https://github.com/bartekmp",
 	"isDesktopOnly": false
 }

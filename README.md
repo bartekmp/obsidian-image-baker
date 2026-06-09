@@ -1,6 +1,6 @@
 # Image Baker 🍞
 
-[![CI](https://github.com/bartoslaff/obsidian-image-baker/actions/workflows/ci.yml/badge.svg)](https://github.com/bartoslaff/obsidian-image-baker/actions/workflows/ci.yml)
+[![CI](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml/badge.svg)](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml)
 
 An [Obsidian](https://obsidian.md) plugin that **bakes images into your notes** as self-contained
 Base64 embeds — and un-bakes them back into regular vault files whenever you want.
@@ -63,12 +63,12 @@ Once accepted into the community catalog: **Settings → Community plugins → B
 ### With BRAT
 
 Install the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin and add
-`bartoslaff/obsidian-image-baker` as a beta plugin.
+`bartekmp/obsidian-image-baker` as a beta plugin.
 
 ### Manual
 
 Download `main.js`, `manifest.json`, and `styles.css` from the
-[latest release](https://github.com/bartoslaff/obsidian-image-baker/releases) and place them in
+[latest release](https://github.com/bartekmp/obsidian-image-baker/releases) and place them in
 `<your vault>/.obsidian/plugins/image-baker/`, then enable the plugin in
 **Settings → Community plugins**.
 
@@ -82,7 +82,7 @@ Download `main.js`, `manifest.json`, and `styles.css` from the
 ### Building
 
 ```bash
-git clone https://github.com/bartoslaff/obsidian-image-baker.git
+git clone https://github.com/bartekmp/obsidian-image-baker.git
 cd obsidian-image-baker
 npm ci
 npm run build        # production build → main.js

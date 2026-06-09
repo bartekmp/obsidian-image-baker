@@ -24,5 +24,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   referenced elsewhere.
 - Configurable maximum embed size, extracted link style, and event log level.
 
-[Unreleased]: https://github.com/bartoslaff/obsidian-image-baker/compare/0.1.0...HEAD
-[0.1.0]: https://github.com/bartoslaff/obsidian-image-baker/releases/tag/0.1.0
+[Unreleased]: https://github.com/bartekmp/obsidian-image-baker/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/bartekmp/obsidian-image-baker/releases/tag/0.1.0
