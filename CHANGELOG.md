@@ -1,0 +1,28 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2026-06-09
+
+### Added
+
+- Embed wiki and markdown image links as inline Base64 data URIs, preserving display parameters
+  and recording the original file name for later restoration.
+- Extract inline Base64 images back into vault files, restoring the recorded file name or
+  deriving one from the parent note.
+- Command palette commands: embed/extract all images in the current note, embed/extract the
+  image under the cursor.
+- Editor context menu actions on image links and embeds.
+- Image list sidebar view (ribbon button and command) showing every image of the active note;
+  clicking an entry jumps the editor to that image.
+- Optional trashing of source files after embedding, guarded against files that are still
+  referenced elsewhere.
+- Configurable maximum embed size, extracted link style, and event log level.
+
+[Unreleased]: https://github.com/bartoslaff/obsidian-image-baker/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/bartoslaff/obsidian-image-baker/releases/tag/0.1.0
