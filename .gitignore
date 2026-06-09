@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+main.js
+*.js.map
+
+# Test output
+coverage/
+
+# Obsidian plugin runtime data (per-vault settings)
+data.json
+
+# Editors and OS noise
+.vscode/
+.idea/
+.DS_Store
