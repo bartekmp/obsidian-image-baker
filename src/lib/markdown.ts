@@ -30,6 +30,10 @@ export interface EmbeddedImage extends BaseLink {
 	alt: string;
 	mime: string;
 	base64: string;
+	/** Offset of the first character of the Base64 payload. */
+	base64Start: number;
+	/** Offset just past the last character of the Base64 payload. */
+	base64End: number;
 }
 
 export type ImageFileLink = WikiImageLink | MarkdownImageLink;
@@ -45,7 +49,7 @@ const WIKI_IMAGE_PATTERN = /!\[\[([^[\]\n]+)\]\]/g;
 const MARKDOWN_IMAGE_PATTERN =
 	/!\[([^[\]\n]*)\]\(\s*(<[^<>\n]*>|[^()\s]+)(?:\s+"[^"\n]*")?\s*\)/g;
 const EMBEDDED_IMAGE_PATTERN =
-	/!\[([^[\]\n]*)\]\(\s*data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=\r\n]+?)\s*\)/gi;
+	/!\[([^[\]\n]*)\]\(\s*data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=\r\n]+?)\s*\)/gid;
 const URI_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
 
 /**
@@ -126,12 +130,18 @@ export function findEmbeddedImages(content: string): EmbeddedImage[] {
 			continue;
 		}
 		const [alt = "", ...params] = (match[1] ?? "").split("|");
+		const [base64Start, base64End] = match.indices?.[3] ?? [
+			match.index,
+			match.index,
+		];
 		images.push({
 			kind: "embedded",
 			alt,
 			params,
 			mime,
 			base64: match[3] ?? "",
+			base64Start,
+			base64End,
 			start: match.index,
 			end: match.index + match[0].length,
 			raw: content.slice(match.index, match.index + match[0].length),

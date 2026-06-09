@@ -57,6 +57,22 @@ describe("ImageBakerPlugin", () => {
 		expect(mock.ribbonIcons.map((icon) => icon.icon)).toEqual(["images"]);
 	});
 
+	it("registers the fold extension and rebuilds it on settings changes", async () => {
+		expect(mock.registeredEditorExtensions.length).toBe(1);
+		const registered = mock.registeredEditorExtensions[0] as unknown[];
+		expect(registered.length).toBe(1);
+
+		plugin.settings.foldEmbeds = false;
+		await plugin.saveSettings();
+		expect(registered.length).toBe(0);
+		expect(app.optionsUpdates).toBe(1);
+
+		plugin.settings.foldEmbeds = true;
+		await plugin.saveSettings();
+		expect(registered.length).toBe(1);
+		expect(app.optionsUpdates).toBe(2);
+	});
+
 	it("creates image list views through the registered factory", () => {
 		const factory = mock.views[IMAGE_LIST_VIEW_TYPE];
 		const view = factory?.(new FakeLeaf(app));

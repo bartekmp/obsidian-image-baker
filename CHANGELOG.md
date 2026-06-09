@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Embed wiki and markdown image links as inline Base64 data URIs, preserving display parameters
   and recording the original file name for later restoration.
+- Collapse the Base64 payload of baked images behind a size pill in the editor (click to
+  expand, toggleable in settings).
 - Bake images directly on paste (e.g. clipboard screenshots) and drag-and-drop, keeping the
   dropped file's name or deriving a timestamped name from the note; transfers with unsupported
   or oversized content fall through to Obsidian's default handling.

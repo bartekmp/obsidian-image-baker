@@ -17,6 +17,7 @@ describe("normalizeSettings", () => {
 	it("keeps valid persisted values", () => {
 		const settings = normalizeSettings({
 			logLevel: "debug",
+			foldEmbeds: false,
 			embedOnPaste: false,
 			embedOnDrop: false,
 			deleteSourceFiles: false,
@@ -25,6 +26,7 @@ describe("normalizeSettings", () => {
 		});
 		expect(settings).toEqual({
 			logLevel: "debug",
+			foldEmbeds: false,
 			embedOnPaste: false,
 			embedOnDrop: false,
 			deleteSourceFiles: false,
@@ -43,6 +45,7 @@ describe("normalizeSettings", () => {
 	it("discards malformed values", () => {
 		const settings = normalizeSettings({
 			logLevel: "verbose",
+			foldEmbeds: "yes",
 			embedOnPaste: "yes",
 			embedOnDrop: 1,
 			deleteSourceFiles: "yes",

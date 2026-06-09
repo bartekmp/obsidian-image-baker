@@ -23,6 +23,20 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
+			.setName("Collapse embedded image data")
+			.setDesc(
+				"Fold the long Base64 text of baked images behind a small size pill in the editor. Click a pill to expand it.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.foldEmbeds)
+					.onChange(async (value) => {
+						this.plugin.settings.foldEmbeds = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Embed images on paste")
 			.setDesc(
 				"Bake pasted images (e.g. screenshots) directly into the note instead of creating attachment files.",

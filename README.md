@@ -25,6 +25,9 @@ note.
   recoverable name inherit the parent note's name (`My note image 1.png`).
 - **Context menu integration** — right-click on an image link or embed in the editor to bake or
   un-bake just that image.
+- **Collapsed embed data** — in the editor, the long Base64 text of a baked image is folded
+  behind a small `base64 · 142 KB` pill; click it to expand, move the cursor away to fold it
+  again. Toggleable in settings.
 - **Image list sidebar** — a right-sidebar view (ribbon button 🖼 or the *Show image list*
   command) lists every image in the active note with a file/baked badge; clicking an entry jumps
   the editor straight to that image.
@@ -43,6 +46,7 @@ note.
 
   | Setting | Default | Description |
   | --- | --- | --- |
+  | Collapse embedded image data | on | Fold Base64 payloads behind a size pill |
   | Embed images on paste | on | Bake pasted images straight into the note |
   | Embed images on drop | on | Bake dragged-in images straight into the note |
   | Delete source files after embedding | on | Trash the original file once baked in |

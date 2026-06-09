@@ -109,6 +109,12 @@ describe("findEmbeddedImages", () => {
 		expect(images[0]).toMatchObject({ alt: "photo.png", params: ["300"] });
 	});
 
+	it("reports the exact payload range", () => {
+		const content = `pad ![a.png](${DATA_URI})`;
+		const image = findEmbeddedImages(content)[0];
+		expect(content.slice(image?.base64Start, image?.base64End)).toBe("SGVsbG8=");
+	});
+
 	it("ignores non-image data URIs", () => {
 		expect(
 			findEmbeddedImages("![f](data:application/pdf;base64,AAAA)"),

@@ -165,7 +165,12 @@ export class FakeApp {
 			this.revealedLeaves.push(leaf);
 			return Promise.resolve();
 		},
+		updateOptions: (): void => {
+			this.optionsUpdates++;
+		},
 	};
+
+	optionsUpdates = 0;
 
 	constructor(options: FakeAppOptions = {}) {
 		if (options.attachmentApi === false) {

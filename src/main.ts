@@ -1,3 +1,4 @@
+import type { Extension } from "@codemirror/state";
 import {
 	Notice,
 	Plugin,
@@ -7,6 +8,7 @@ import {
 	type Menu,
 	type TFile,
 } from "obsidian";
+import { imageFoldExtension } from "./editor/fold";
 import {
 	embedImages,
 	extractImages,
@@ -28,10 +30,13 @@ import { IMAGE_LIST_VIEW_TYPE, ImageListView } from "./view";
 export default class ImageBakerPlugin extends Plugin {
 	override settings: ImageBakerSettings = normalizeSettings(null);
 	readonly logger = new Logger("Image Baker");
+	private readonly editorExtensions: Extension[] = [];
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new ImageBakerSettingTab(this.app, this));
+		this.applyEditorExtensions();
+		this.registerEditorExtension(this.editorExtensions);
 		this.registerView(
 			IMAGE_LIST_VIEW_TYPE,
 			(leaf) => new ImageListView(leaf, this),
@@ -131,6 +136,16 @@ export default class ImageBakerPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		this.logger.setLevel(this.settings.logLevel);
+		this.applyEditorExtensions();
+		this.app.workspace.updateOptions();
+	}
+
+	/** Rebuilds the in-place extension list so toggles apply immediately. */
+	private applyEditorExtensions(): void {
+		this.editorExtensions.length = 0;
+		if (this.settings.foldEmbeds) {
+			this.editorExtensions.push(imageFoldExtension());
+		}
 	}
 
 	async activateImageListView(): Promise<void> {

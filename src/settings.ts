@@ -5,6 +5,8 @@ export type LinkStyle = "wiki" | "markdown";
 export interface ImageBakerSettings {
 	/** Verbosity of event logging to the developer console. */
 	logLevel: LogLevelName;
+	/** Collapse Base64 payloads behind a size pill in the editor. */
+	foldEmbeds: boolean;
 	/** Embed images directly when they are pasted into a note. */
 	embedOnPaste: boolean;
 	/** Embed images directly when they are dropped into a note. */
@@ -19,6 +21,7 @@ export interface ImageBakerSettings {
 
 export const DEFAULT_SETTINGS: ImageBakerSettings = {
 	logLevel: "warn",
+	foldEmbeds: true,
 	embedOnPaste: true,
 	embedOnDrop: true,
 	deleteSourceFiles: true,
@@ -35,6 +38,9 @@ export function normalizeSettings(raw: unknown): ImageBakerSettings {
 	const data = raw as Record<string, unknown>;
 	if (isLogLevelName(data.logLevel)) {
 		settings.logLevel = data.logLevel;
+	}
+	if (typeof data.foldEmbeds === "boolean") {
+		settings.foldEmbeds = data.foldEmbeds;
 	}
 	if (typeof data.embedOnPaste === "boolean") {
 		settings.embedOnPaste = data.embedOnPaste;

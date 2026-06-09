@@ -31,6 +31,7 @@ describe("ImageBakerSettingTab", () => {
 
 	it("renders all settings", () => {
 		expect(MockSetting.instances.map((setting) => setting.name)).toEqual([
+			"Collapse embedded image data",
 			"Embed images on paste",
 			"Embed images on drop",
 			"Delete source files after embedding",
@@ -46,6 +47,11 @@ describe("ImageBakerSettingTab", () => {
 
 		expect(plugin.settings.embedOnPaste).toBe(false);
 		expect(plugin.settings.embedOnDrop).toBe(false);
+	});
+
+	it("persists the fold toggle", async () => {
+		await findSetting("Collapse embedded image data").toggles[0]?.__change(false);
+		expect(plugin.settings.foldEmbeds).toBe(false);
 	});
 
 	it("persists the delete-source-files toggle", async () => {

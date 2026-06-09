@@ -110,6 +110,12 @@ export class Plugin {
 		this.views[type] = factory;
 	}
 
+	registeredEditorExtensions: unknown[] = [];
+
+	registerEditorExtension(extension: unknown): void {
+		this.registeredEditorExtensions.push(extension);
+	}
+
 	addRibbonIcon(
 		icon: string,
 		title: string,
