@@ -1,8 +1,9 @@
 import { bytesToBase64 } from "../lib/base64";
-import { sanitizeFilename } from "../lib/filename";
+import { matchExtensionToMime, sanitizeFilename } from "../lib/filename";
 import { buildEmbeddedImageMarkdown } from "../lib/markdown";
 import { extensionFromMime, isImagePath } from "../lib/mime";
 import type { ImageBakerSettings } from "../settings";
+import { canvasReencode, optimizeImage, type Reencoder } from "./optimize";
 
 /** Structural subset of the DOM File used here, kept small for testing. */
 export interface TransferFile {
@@ -88,20 +89,23 @@ export function transferFilename(
 export async function buildTransferEmbeds(
 	files: readonly TransferFile[],
 	noteBasename: string,
+	settings: ImageBakerSettings,
 	now = new Date(),
+	reencode: Reencoder = canvasReencode,
 ): Promise<string> {
 	const parts: string[] = [];
 	for (const [index, file] of files.entries()) {
-		const mime = file.type.toLowerCase();
-		const name = transferFilename(
-			file.name,
-			noteBasename,
+		let bytes = new Uint8Array(await file.arrayBuffer());
+		let mime = file.type.toLowerCase();
+		const optimized = await optimizeImage(bytes, mime, settings, reencode);
+		if (optimized.changed) {
+			bytes = optimized.bytes;
+			mime = optimized.mime;
+		}
+		const name = matchExtensionToMime(
+			transferFilename(file.name, noteBasename, mime, now, index, files.length),
 			mime,
-			now,
-			index,
-			files.length,
 		);
-		const bytes = new Uint8Array(await file.arrayBuffer());
 		parts.push(buildEmbeddedImageMarkdown(name, [], mime, bytesToBase64(bytes)));
 	}
 	return parts.join("\n");

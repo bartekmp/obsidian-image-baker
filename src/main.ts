@@ -269,7 +269,11 @@ export default class ImageBakerPlugin extends Plugin {
 		note: TFile,
 	): Promise<void> {
 		try {
-			const markdown = await buildTransferEmbeds(files, note.basename);
+			const markdown = await buildTransferEmbeds(
+				files,
+				note.basename,
+				this.settings,
+			);
 			editor.replaceSelection(markdown);
 			this.logger.debug(
 				`Embedded ${files.length} transferred image(s) into "${note.path}"`,

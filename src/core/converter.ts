@@ -1,6 +1,10 @@
 import { normalizePath, type App, type FileManager, type TFile } from "obsidian";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
-import { filenameFromAlt, generateImageFilename } from "../lib/filename";
+import {
+	filenameFromAlt,
+	generateImageFilename,
+	matchExtensionToMime,
+} from "../lib/filename";
 import type { Logger } from "../lib/logger";
 import {
 	applyReplacements,
@@ -13,6 +17,7 @@ import {
 } from "../lib/markdown";
 import { extensionFromMime, mimeFromExtension } from "../lib/mime";
 import type { ImageBakerSettings } from "../settings";
+import { canvasReencode, optimizeImage, type Reencoder } from "./optimize";
 
 export interface EmbedReport {
 	embedded: number;
@@ -121,6 +126,7 @@ export async function embedImages(
 	settings: ImageBakerSettings,
 	logger: Logger,
 	only?: ImageFileLink,
+	reencode: Reencoder = canvasReencode,
 ): Promise<EmbedReport> {
 	const report: EmbedReport = {
 		embedded: 0,
@@ -162,14 +168,31 @@ export async function embedImages(
 		}
 		try {
 			const data = await app.vault.readBinary(file);
-			const base64 = bytesToBase64(new Uint8Array(data));
+			let payload = new Uint8Array(data);
+			let payloadMime = mime;
+			let filename = file.name;
+			const optimized = await optimizeImage(
+				payload,
+				payloadMime,
+				settings,
+				reencode,
+			);
+			if (optimized.changed) {
+				logger.debug(
+					`Optimized "${file.path}": ${payload.length} -> ${optimized.bytes.length} bytes (${optimized.mime})`,
+				);
+				payload = optimized.bytes;
+				payloadMime = optimized.mime;
+				filename = matchExtensionToMime(filename, payloadMime);
+			}
+			const base64 = bytesToBase64(payload);
 			replacementByRaw.set(
 				link.raw,
-				buildEmbeddedImageMarkdown(file.name, link.params, mime, base64),
+				buildEmbeddedImageMarkdown(filename, link.params, payloadMime, base64),
 			);
 			sources.set(file.path, file);
 			report.embedded++;
-			logger.debug(`Embedded "${file.path}" (${data.byteLength} bytes)`);
+			logger.debug(`Embedded "${file.path}" (${payload.length} bytes)`);
 		} catch (error) {
 			report.failures.push(`Failed to read "${file.path}"`);
 			logger.error(`Failed to read "${file.path}"`, error);

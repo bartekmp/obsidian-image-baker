@@ -36,9 +36,29 @@ describe("ImageBakerSettingTab", () => {
 			"Embed images on drop",
 			"Delete source files after embedding",
 			"Maximum file size to embed (KB)",
+			"Optimize images before embedding",
+			"Optimized format",
+			"Optimized quality",
+			"Maximum image width when optimizing (px)",
 			"Extracted link style",
 			"Log level",
 		]);
+	});
+
+	it("persists the optimization settings", async () => {
+		await findSetting("Optimize images before embedding").toggles[0]?.__change(true);
+		await findSetting("Optimized format").dropdowns[0]?.__change("jpeg");
+		await findSetting("Optimized quality").sliders[0]?.__change(50);
+		await findSetting("Maximum image width when optimizing (px)").texts[0]?.__change("1280");
+
+		expect(plugin.settings.optimizeImages).toBe(true);
+		expect(plugin.settings.optimizeFormat).toBe("jpeg");
+		expect(plugin.settings.optimizeQuality).toBe(50);
+		expect(plugin.settings.optimizeMaxWidth).toBe(1280);
+	});
+
+	it("configures the quality slider range", () => {
+		expect(findSetting("Optimized quality").sliders[0]?.limits).toEqual([1, 100, 1]);
 	});
 
 	it("persists the paste and drop toggles", async () => {

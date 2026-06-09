@@ -17,6 +17,14 @@ export interface ImageBakerSettings {
 	linkStyle: LinkStyle;
 	/** Images larger than this are not embedded. 0 disables the limit. */
 	maxEmbedFileSizeKB: number;
+	/** Re-encode images before embedding to shrink them. */
+	optimizeImages: boolean;
+	/** Target format when optimizing. */
+	optimizeFormat: "webp" | "jpeg";
+	/** Encoding quality (1-100) when optimizing. */
+	optimizeQuality: number;
+	/** Downscale images wider than this (px) when optimizing. 0 keeps size. */
+	optimizeMaxWidth: number;
 }
 
 export const DEFAULT_SETTINGS: ImageBakerSettings = {
@@ -27,6 +35,10 @@ export const DEFAULT_SETTINGS: ImageBakerSettings = {
 	deleteSourceFiles: true,
 	linkStyle: "wiki",
 	maxEmbedFileSizeKB: 0,
+	optimizeImages: false,
+	optimizeFormat: "webp",
+	optimizeQuality: 75,
+	optimizeMaxWidth: 0,
 };
 
 /** Merges persisted data with defaults, discarding anything malformed. */
@@ -60,6 +72,28 @@ export function normalizeSettings(raw: unknown): ImageBakerSettings {
 		data.maxEmbedFileSizeKB >= 0
 	) {
 		settings.maxEmbedFileSizeKB = Math.floor(data.maxEmbedFileSizeKB);
+	}
+	if (typeof data.optimizeImages === "boolean") {
+		settings.optimizeImages = data.optimizeImages;
+	}
+	if (data.optimizeFormat === "webp" || data.optimizeFormat === "jpeg") {
+		settings.optimizeFormat = data.optimizeFormat;
+	}
+	if (
+		typeof data.optimizeQuality === "number" &&
+		Number.isFinite(data.optimizeQuality)
+	) {
+		settings.optimizeQuality = Math.min(
+			100,
+			Math.max(1, Math.round(data.optimizeQuality)),
+		);
+	}
+	if (
+		typeof data.optimizeMaxWidth === "number" &&
+		Number.isFinite(data.optimizeMaxWidth) &&
+		data.optimizeMaxWidth >= 0
+	) {
+		settings.optimizeMaxWidth = Math.floor(data.optimizeMaxWidth);
 	}
 	return settings;
 }

@@ -119,7 +119,7 @@ describe("buildTransferEmbeds", () => {
 			makeTransferFile("image.png", "image/png", bytes),
 		];
 
-		const markdown = await buildTransferEmbeds(files, "Trip", NOW);
+		const markdown = await buildTransferEmbeds(files, "Trip", makeSettings(), NOW);
 		const lines = markdown.split("\n");
 
 		expect(lines).toEqual([
@@ -132,8 +132,23 @@ describe("buildTransferEmbeds", () => {
 		const markdown = await buildTransferEmbeds(
 			[makeTransferFile("a.png", "IMAGE/PNG")],
 			"Trip",
+			makeSettings(),
 			NOW,
 		);
 		expect(markdown).toContain("data:image/png;base64,");
+	});
+
+	it("optimizes transferred images and renames them to the new format", async () => {
+		const smaller = sampleBytes(4);
+		const markdown = await buildTransferEmbeds(
+			[makeTransferFile("photo.png", "image/png", sampleBytes(64))],
+			"Trip",
+			makeSettings({ optimizeImages: true }),
+			NOW,
+			() => Promise.resolve(smaller),
+		);
+		expect(markdown).toBe(
+			`![photo.webp](data:image/webp;base64,${bytesToBase64(smaller)})`,
+		);
 	});
 });

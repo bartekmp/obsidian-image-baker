@@ -23,6 +23,10 @@ describe("normalizeSettings", () => {
 			deleteSourceFiles: false,
 			linkStyle: "markdown",
 			maxEmbedFileSizeKB: 512,
+			optimizeImages: true,
+			optimizeFormat: "jpeg",
+			optimizeQuality: 60,
+			optimizeMaxWidth: 1200,
 		});
 		expect(settings).toEqual({
 			logLevel: "debug",
@@ -32,6 +36,10 @@ describe("normalizeSettings", () => {
 			deleteSourceFiles: false,
 			linkStyle: "markdown",
 			maxEmbedFileSizeKB: 512,
+			optimizeImages: true,
+			optimizeFormat: "jpeg",
+			optimizeQuality: 60,
+			optimizeMaxWidth: 1200,
 		});
 	});
 
@@ -51,8 +59,18 @@ describe("normalizeSettings", () => {
 			deleteSourceFiles: "yes",
 			linkStyle: "html",
 			maxEmbedFileSizeKB: -5,
+			optimizeImages: "always",
+			optimizeFormat: "png",
+			optimizeQuality: "high",
+			optimizeMaxWidth: -100,
 		});
 		expect(settings).toEqual(DEFAULT_SETTINGS);
+	});
+
+	it("clamps and rounds the optimization quality", () => {
+		expect(normalizeSettings({ optimizeQuality: 250 }).optimizeQuality).toBe(100);
+		expect(normalizeSettings({ optimizeQuality: 0 }).optimizeQuality).toBe(1);
+		expect(normalizeSettings({ optimizeQuality: 79.6 }).optimizeQuality).toBe(80);
 	});
 
 	it("floors fractional size limits", () => {

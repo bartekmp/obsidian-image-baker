@@ -182,6 +182,44 @@ describe("embedImages", () => {
 		expect(app.vault.contents.get("Trip.md")).toBe("```\n![[photo.png]]\n```");
 	});
 
+	it("optimizes images when enabled, renaming the stored file name", async () => {
+		app.vault.addBinary("photo.png", bytes);
+		const note = app.vault.addNote("Trip.md", "![[photo.png|300]]");
+		const smaller = sampleBytes(8);
+
+		const report = await embedImages(
+			app.asApp(),
+			note,
+			makeSettings({ optimizeImages: true }),
+			logger,
+			undefined,
+			() => Promise.resolve(smaller),
+		);
+
+		expect(report.embedded).toBe(1);
+		expect(app.vault.contents.get("Trip.md")).toBe(
+			`![photo.webp|300](data:image/webp;base64,${bytesToBase64(smaller)})`,
+		);
+	});
+
+	it("keeps the original bytes when optimization is disabled", async () => {
+		app.vault.addBinary("photo.png", bytes);
+		const note = app.vault.addNote("Trip.md", "![[photo.png]]");
+
+		await embedImages(
+			app.asApp(),
+			note,
+			makeSettings(),
+			logger,
+			undefined,
+			() => Promise.resolve(sampleBytes(1)),
+		);
+
+		expect(app.vault.contents.get("Trip.md")).toBe(
+			`![photo.png](data:image/png;base64,${base64})`,
+		);
+	});
+
 	it("records a failure when the binary cannot be read", async () => {
 		const broken = app.vault.addNote("Trip.md", "![[photo.png]]");
 		// Register the image file without binary content to force a read error.

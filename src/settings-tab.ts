@@ -95,6 +95,66 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Optimize images before embedding")
+			.setDesc(
+				"Re-encode images to a smaller format when baking them in. The original is only replaced when the result is actually smaller. SVG and GIF files are never re-encoded.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.optimizeImages)
+					.onChange(async (value) => {
+						this.plugin.settings.optimizeImages = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Optimized format")
+			.setDesc("Target format for optimized images.")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions({ webp: "WebP", jpeg: "JPEG" })
+					.setValue(this.plugin.settings.optimizeFormat)
+					.onChange(async (value) => {
+						this.plugin.settings.optimizeFormat =
+							value === "jpeg" ? "jpeg" : "webp";
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Optimized quality")
+			.setDesc("Encoding quality for optimized images (1-100).")
+			.addSlider((slider) =>
+				slider
+					.setLimits(1, 100, 1)
+					.setDynamicTooltip()
+					.setValue(this.plugin.settings.optimizeQuality)
+					.onChange(async (value) => {
+						this.plugin.settings.optimizeQuality = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Maximum image width when optimizing (px)")
+			.setDesc(
+				"Downscale wider images to this width before embedding. Use 0 to keep the original size.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("0")
+					.setValue(String(this.plugin.settings.optimizeMaxWidth))
+					.onChange(async (value) => {
+						const parsed = Number(value);
+						if (Number.isFinite(parsed) && parsed >= 0) {
+							this.plugin.settings.optimizeMaxWidth = Math.floor(parsed);
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Extracted link style")
 			.setDesc(
 				"Link format used when an embedded image is extracted back to a file.",

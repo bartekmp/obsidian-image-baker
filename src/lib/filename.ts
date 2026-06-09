@@ -1,4 +1,9 @@
-import { isImagePath } from "./mime";
+import {
+	extensionFromMime,
+	extensionFromPath,
+	isImagePath,
+	mimeFromExtension,
+} from "./mime";
 
 // eslint-disable-next-line no-control-regex
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|\u0000-\u001f]/g;
@@ -22,6 +27,26 @@ export function filenameFromAlt(alt: string): string | null {
 		return null;
 	}
 	return sanitized;
+}
+
+/**
+ * Aligns a file name's extension with the given MIME type, e.g. after an
+ * image was re-encoded to another format. Names whose extension already
+ * matches the MIME type (including jpg/jpeg aliases) are kept as-is.
+ */
+export function matchExtensionToMime(filename: string, mime: string): string {
+	const normalizedMime = mime.toLowerCase();
+	if (mimeFromExtension(extensionFromPath(filename)) === normalizedMime) {
+		return filename;
+	}
+	const extension = extensionFromMime(normalizedMime);
+	if (!extension) {
+		return filename;
+	}
+	const dot = filename.lastIndexOf(".");
+	return dot > 0
+		? `${filename.slice(0, dot + 1)}${extension}`
+		: `${filename}.${extension}`;
 }
 
 /**

@@ -25,6 +25,10 @@ note.
   recoverable name inherit the parent note's name (`My note image 1.png`).
 - **Context menu integration** — right-click on an image link or embed in the editor to bake or
   un-bake just that image.
+- **Optional image optimization** — re-encode images to WebP or JPEG (configurable quality,
+  optional max width downscaling) as they are baked in, typically shrinking screenshots
+  several-fold. The optimized version is only used when it is actually smaller; SVG and GIF are
+  never re-encoded. Off by default.
 - **Collapsed embed data** — in the editor, the long Base64 text of a baked image is folded
   behind a small `base64 · 142 KB` pill; click it to expand, move the cursor away to fold it
   again. Toggleable in settings.
@@ -51,6 +55,8 @@ note.
   | Embed images on drop | on | Bake dragged-in images straight into the note |
   | Delete source files after embedding | on | Trash the original file once baked in |
   | Maximum file size to embed (KB) | 0 (no limit) | Skip images larger than this |
+  | Optimize images before embedding | off | Re-encode images while baking them in |
+  | Optimized format / quality / max width | WebP / 75 / 0 | Target encoding for optimization |
   | Extracted link style | Wikilink | `![[image.png]]` or `![](image.png)` |
   | Log level | Warnings | Event logging verbosity: Off, Errors, Warnings, Info, Debug |
 - **Event logging** — all operations are logged to the developer console

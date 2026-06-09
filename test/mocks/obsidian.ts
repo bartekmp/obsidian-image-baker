@@ -247,6 +247,38 @@ export class TextComponent {
 	}
 }
 
+export class SliderComponent {
+	value = 0;
+	limits: number[] = [];
+	dynamicTooltip = false;
+	changeHandler: ((value: number) => unknown) | null = null;
+
+	setLimits(min: number, max: number, step: number): this {
+		this.limits = [min, max, step];
+		return this;
+	}
+
+	setDynamicTooltip(): this {
+		this.dynamicTooltip = true;
+		return this;
+	}
+
+	setValue(value: number): this {
+		this.value = value;
+		return this;
+	}
+
+	onChange(handler: (value: number) => unknown): this {
+		this.changeHandler = handler;
+		return this;
+	}
+
+	async __change(value: number): Promise<void> {
+		this.value = value;
+		await this.changeHandler?.(value);
+	}
+}
+
 export class Setting {
 	static instances: Setting[] = [];
 
@@ -255,6 +287,7 @@ export class Setting {
 	dropdowns: DropdownComponent[] = [];
 	toggles: ToggleComponent[] = [];
 	texts: TextComponent[] = [];
+	sliders: SliderComponent[] = [];
 
 	constructor(public containerEl: unknown) {
 		Setting.instances.push(this);
@@ -292,6 +325,13 @@ export class Setting {
 		const text = new TextComponent();
 		this.texts.push(text);
 		configure(text);
+		return this;
+	}
+
+	addSlider(configure: (slider: SliderComponent) => unknown): this {
+		const slider = new SliderComponent();
+		this.sliders.push(slider);
+		configure(slider);
 		return this;
 	}
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	filenameFromAlt,
 	generateImageFilename,
+	matchExtensionToMime,
 	sanitizeFilename,
 } from "../src/lib/filename";
 
@@ -32,6 +33,27 @@ describe("filenameFromAlt", () => {
 		expect(filenameFromAlt("just a caption")).toBeNull();
 		expect(filenameFromAlt("document.pdf")).toBeNull();
 		expect(filenameFromAlt("")).toBeNull();
+	});
+});
+
+describe("matchExtensionToMime", () => {
+	it("keeps names whose extension already matches", () => {
+		expect(matchExtensionToMime("photo.png", "image/png")).toBe("photo.png");
+		expect(matchExtensionToMime("photo.jpeg", "image/jpeg")).toBe("photo.jpeg");
+		expect(matchExtensionToMime("photo.jpg", "IMAGE/JPEG")).toBe("photo.jpg");
+	});
+
+	it("replaces mismatched extensions", () => {
+		expect(matchExtensionToMime("photo.png", "image/webp")).toBe("photo.webp");
+		expect(matchExtensionToMime("a.b.png", "image/jpeg")).toBe("a.b.jpg");
+	});
+
+	it("appends an extension when the name has none", () => {
+		expect(matchExtensionToMime("photo", "image/webp")).toBe("photo.webp");
+	});
+
+	it("keeps the name for unknown MIME types", () => {
+		expect(matchExtensionToMime("photo.png", "image/tiff")).toBe("photo.png");
 	});
 });
 
