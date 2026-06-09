@@ -14,7 +14,6 @@ pipeline {
     agent any
 
     options {
-        timestamps()
         disableConcurrentBuilds()
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
