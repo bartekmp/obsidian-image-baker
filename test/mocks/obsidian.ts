@@ -59,6 +59,10 @@ export class FakeElement {
 		this.children = [];
 	}
 
+	setText(text: string): void {
+		this.text = text;
+	}
+
 	createEl(tag: string, options?: { text?: string; cls?: string }): FakeElement {
 		const child = new FakeElement(tag, options);
 		this.children.push(child);
@@ -140,6 +144,26 @@ export class Plugin {
 
 	__getStoredData(): unknown {
 		return this.storedData;
+	}
+}
+
+export class Modal {
+	app: unknown;
+	contentEl = new FakeElement("div");
+	titleEl = new FakeElement("div");
+	closed = false;
+
+	constructor(app: unknown) {
+		this.app = app;
+	}
+
+	open(): void {
+		(this as { onOpen?: () => void }).onOpen?.();
+	}
+
+	close(): void {
+		this.closed = true;
+		(this as { onClose?: () => void }).onClose?.();
 	}
 }
 

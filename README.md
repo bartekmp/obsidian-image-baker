@@ -32,6 +32,9 @@ note.
 - **Collapsed embed data** — in the editor, the long Base64 text of a baked image is folded
   behind a small `base64 · 142 KB` pill; click it to expand, move the cursor away to fold it
   again. Toggleable in settings.
+- **Batch conversion** — bake or extract across the entire vault or the current folder. The
+  dialog shows a dry-run summary first ("Found 214 embeddable images (~38 MB) in 96 notes."),
+  reports progress note by note, and can be aborted mid-run.
 - **Image list sidebar** — a right-sidebar view (ribbon button 🖼 or the *Show image list*
   command) lists every image in the active note with a file/baked badge; clicking an entry jumps
   the editor straight to that image.
@@ -40,6 +43,8 @@ note.
   - *Extract all embedded images to files*
   - *Embed image under cursor*
   - *Extract image under cursor*
+  - *Embed images across vault or folder*
+  - *Extract embedded images across vault or folder*
   - *Show image list for the current note*
 - **Safe by design**:
   - Source files are moved to the trash (never hard-deleted), and only when no other note —

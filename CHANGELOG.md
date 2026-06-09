@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Embed wiki and markdown image links as inline Base64 data URIs, preserving display parameters
   and recording the original file name for later restoration.
+- Batch conversion across the vault or the current folder, with a dry-run summary,
+  per-note progress, and an abort button.
 - Optional image optimization while baking: re-encode to WebP or JPEG with configurable
   quality and max width, applied only when the result is smaller (SVG/GIF excluded).
 - Collapse the Base64 payload of baked images behind a size pill in the editor (click to

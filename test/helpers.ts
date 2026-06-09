@@ -77,6 +77,10 @@ export class FakeVault {
 	cachedRead(file: TFile): Promise<string> {
 		return this.read(file);
 	}
+
+	getMarkdownFiles(): TFile[] {
+		return [...this.files.values()].filter((file) => file.extension === "md");
+	}
 }
 
 export class FakeLeaf {

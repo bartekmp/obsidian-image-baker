@@ -25,6 +25,7 @@ import {
 } from "./lib/markdown";
 import { normalizeSettings, type ImageBakerSettings } from "./settings";
 import { ImageBakerSettingTab } from "./settings-tab";
+import { BatchModal } from "./ui/batch-modal";
 import { IMAGE_LIST_VIEW_TYPE, ImageListView } from "./view";
 
 export default class ImageBakerPlugin extends Plugin {
@@ -83,6 +84,22 @@ export default class ImageBakerPlugin extends Plugin {
 					(link): link is EmbeddedImage => link.kind === "embedded",
 					(file, link) => this.extractOne(file, link),
 				),
+		});
+
+		this.addCommand({
+			id: "batch-embed-images",
+			name: "Embed images across vault or folder",
+			callback: () => {
+				new BatchModal(this.app, this, "embed").open();
+			},
+		});
+
+		this.addCommand({
+			id: "batch-extract-images",
+			name: "Extract embedded images across vault or folder",
+			callback: () => {
+				new BatchModal(this.app, this, "extract").open();
+			},
 		});
 
 		this.addCommand({

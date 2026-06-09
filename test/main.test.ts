@@ -47,6 +47,8 @@ describe("ImageBakerPlugin", () => {
 			"extract-all-images",
 			"embed-image-at-cursor",
 			"extract-image-at-cursor",
+			"batch-embed-images",
+			"batch-extract-images",
 			"show-image-list",
 		]);
 		expect(mock.settingTabs).toHaveLength(1);
