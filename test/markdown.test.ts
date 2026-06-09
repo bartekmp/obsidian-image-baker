@@ -3,6 +3,7 @@ import {
 	applyReplacements,
 	buildEmbeddedImageMarkdown,
 	buildImageFileLink,
+	findEmbedBySrc,
 	findEmbeddedImages,
 	findImageFileLinks,
 	findLinkAtOffset,
@@ -123,6 +124,27 @@ describe("findEmbeddedImages", () => {
 
 	it("ignores embeds inside code regions", () => {
 		expect(findEmbeddedImages(`\`![a](${DATA_URI})\``)).toHaveLength(0);
+	});
+});
+
+describe("findEmbedBySrc", () => {
+	const content = `a ![one.png](${DATA_URI}) b ![two.png](data:image/png;base64,QUJD)`;
+
+	it("matches a rendered src back to its embed", () => {
+		expect(findEmbedBySrc(content, "data:image/png;base64,QUJD")).toMatchObject({
+			alt: "two.png",
+		});
+	});
+
+	it("matches case-insensitively on the MIME type", () => {
+		expect(findEmbedBySrc(content, "data:IMAGE/PNG;base64,SGVsbG8=")).toMatchObject(
+			{ alt: "one.png" },
+		);
+	});
+
+	it("returns null for non-data sources and unknown payloads", () => {
+		expect(findEmbedBySrc(content, "https://example.com/x.png")).toBeNull();
+		expect(findEmbedBySrc(content, "data:image/png;base64,WFla")).toBeNull();
 	});
 });
 

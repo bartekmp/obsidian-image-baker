@@ -151,6 +151,32 @@ export function findEmbeddedImages(content: string): EmbeddedImage[] {
 	return images;
 }
 
+const DATA_URI_SRC_PATTERN =
+	/^data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,([\s\S]*)$/i;
+
+/**
+ * Finds the embedded image whose payload matches a rendered `src`
+ * attribute, e.g. to map an image in reading view back to its markdown.
+ */
+export function findEmbedBySrc(
+	content: string,
+	src: string,
+): EmbeddedImage | null {
+	const match = DATA_URI_SRC_PATTERN.exec(src.trim());
+	if (!match) {
+		return null;
+	}
+	const mime = (match[1] ?? "").toLowerCase();
+	const payload = (match[2] ?? "").replace(/\s+/g, "");
+	return (
+		findEmbeddedImages(content).find(
+			(image) =>
+				image.mime === mime &&
+				image.base64.replace(/\s+/g, "") === payload,
+		) ?? null
+	);
+}
+
 /** Returns the image link (of any kind) covering the given offset, if any. */
 export function findLinkAtOffset(
 	content: string,

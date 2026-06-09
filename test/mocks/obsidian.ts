@@ -120,6 +120,16 @@ export class Plugin {
 		this.registeredEditorExtensions.push(extension);
 	}
 
+	markdownPostProcessors: ((element: unknown, context: unknown) => unknown)[] =
+		[];
+
+	registerMarkdownPostProcessor(
+		processor: (element: unknown, context: unknown) => unknown,
+	): unknown {
+		this.markdownPostProcessors.push(processor);
+		return processor;
+	}
+
 	addRibbonIcon(
 		icon: string,
 		title: string,
@@ -382,12 +392,28 @@ export class MenuItem {
 }
 
 export class Menu {
+	static instances: Menu[] = [];
+
 	items: MenuItem[] = [];
+	shownAt: unknown = null;
+
+	constructor() {
+		Menu.instances.push(this);
+	}
+
+	static reset(): void {
+		Menu.instances = [];
+	}
 
 	addItem(configure: (item: MenuItem) => unknown): this {
 		const item = new MenuItem();
 		this.items.push(item);
 		configure(item);
+		return this;
+	}
+
+	showAtMouseEvent(event: unknown): this {
+		this.shownAt = event;
 		return this;
 	}
 }

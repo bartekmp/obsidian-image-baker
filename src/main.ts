@@ -1,12 +1,12 @@
 import type { Extension } from "@codemirror/state";
 import {
+	Menu,
 	Notice,
 	Plugin,
+	TFile,
 	type Editor,
 	type MarkdownFileInfo,
 	type MarkdownView,
-	type Menu,
-	type TFile,
 } from "obsidian";
 import { imageFoldExtension } from "./editor/fold";
 import {
@@ -18,6 +18,7 @@ import {
 import { buildTransferEmbeds, shouldEmbedTransfer } from "./core/transfer";
 import { Logger } from "./lib/logger";
 import {
+	findEmbedBySrc,
 	findLinkAtOffset,
 	type AnyImageLink,
 	type EmbeddedImage,
@@ -113,6 +114,10 @@ export default class ImageBakerPlugin extends Plugin {
 				this.populateEditorMenu(menu, editor, info);
 			}),
 		);
+
+		this.registerMarkdownPostProcessor((element, context) => {
+			this.attachReadingViewMenus(element, context.sourcePath);
+		});
 
 		this.registerEvent(
 			this.app.workspace.on("editor-paste", (evt, editor, info) => {
@@ -303,6 +308,46 @@ export default class ImageBakerPlugin extends Plugin {
 		} catch (error) {
 			this.reportFailure("Failed to embed transferred images", error);
 		}
+	}
+
+	/** Offers "Extract image to file" on baked images in reading view. */
+	private attachReadingViewMenus(element: HTMLElement, sourcePath: string): void {
+		const images = element.querySelectorAll<HTMLImageElement>(
+			'img[src^="data:image/"]',
+		);
+		for (const img of Array.from(images)) {
+			img.addEventListener("contextmenu", (event) => {
+				event.preventDefault();
+				const menu = new Menu();
+				menu.addItem((item) =>
+					item
+						.setTitle("Extract image to file")
+						.setIcon("image-down")
+						.onClick(() =>
+							void this.extractBySrc(
+								sourcePath,
+								img.getAttribute("src") ?? "",
+							),
+						),
+				);
+				menu.showAtMouseEvent(event);
+			});
+		}
+	}
+
+	private async extractBySrc(sourcePath: string, src: string): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(sourcePath);
+		if (!(file instanceof TFile)) {
+			this.logger.warn(`No note found at "${sourcePath}"`);
+			return;
+		}
+		const embed = findEmbedBySrc(await this.app.vault.read(file), src);
+		if (!embed) {
+			this.logger.warn(`Could not match a rendered image in "${sourcePath}"`);
+			new Notice("Could not locate this embedded image in the note.");
+			return;
+		}
+		await this.extractOne(file, embed);
 	}
 
 	private async embedAll(file: TFile): Promise<void> {
