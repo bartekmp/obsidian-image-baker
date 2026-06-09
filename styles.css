@@ -1,0 +1,39 @@
+.image-baker-empty {
+	color: var(--text-muted);
+	padding: var(--size-4-2);
+}
+
+.image-baker-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.image-baker-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+	padding: var(--size-4-1) var(--size-4-2);
+	border-radius: var(--radius-s);
+	cursor: var(--cursor);
+}
+
+.image-baker-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.image-baker-item-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.image-baker-item-badge {
+	flex-shrink: 0;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background-color: var(--background-secondary);
+	padding: 0 var(--size-4-1);
+	border-radius: var(--radius-s);
+}

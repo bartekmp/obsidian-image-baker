@@ -22,6 +22,7 @@ import {
 } from "./lib/markdown";
 import { normalizeSettings, type ImageBakerSettings } from "./settings";
 import { ImageBakerSettingTab } from "./settings-tab";
+import { IMAGE_LIST_VIEW_TYPE, ImageListView } from "./view";
 
 export default class ImageBakerPlugin extends Plugin {
 	override settings: ImageBakerSettings = normalizeSettings(null);
@@ -30,6 +31,13 @@ export default class ImageBakerPlugin extends Plugin {
 	override async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new ImageBakerSettingTab(this.app, this));
+		this.registerView(
+			IMAGE_LIST_VIEW_TYPE,
+			(leaf) => new ImageListView(leaf, this),
+		);
+		this.addRibbonIcon("images", "Open note image list", () =>
+			void this.activateImageListView(),
+		);
 
 		this.addCommand({
 			id: "embed-all-images",
@@ -71,6 +79,12 @@ export default class ImageBakerPlugin extends Plugin {
 				),
 		});
 
+		this.addCommand({
+			id: "show-image-list",
+			name: "Show image list for the current note",
+			callback: () => void this.activateImageListView(),
+		});
+
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, info) => {
 				this.populateEditorMenu(menu, editor, info);
@@ -92,6 +106,21 @@ export default class ImageBakerPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		this.logger.setLevel(this.settings.logLevel);
+	}
+
+	async activateImageListView(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(IMAGE_LIST_VIEW_TYPE)[0];
+		if (existing) {
+			await this.app.workspace.revealLeaf(existing);
+			return;
+		}
+		const leaf = this.app.workspace.getRightLeaf(false);
+		if (!leaf) {
+			this.logger.warn("Could not create a sidebar leaf for the image list");
+			return;
+		}
+		await leaf.setViewState({ type: IMAGE_LIST_VIEW_TYPE, active: true });
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	private linkAtCursor(editor: Editor): AnyImageLink | null {
