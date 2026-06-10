@@ -8,18 +8,18 @@ on:
   push:
     branches: [main]
 
+# All writes go through the RELEASE_TOKEN PAT; the default GITHUB_TOKEN
+# is unused and gets no write access.
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Semantic release
+  build-and-release:
+    name: Build and release
     runs-on: self-hosted  # ubuntu-latest
     steps:
       - name: Check out repository

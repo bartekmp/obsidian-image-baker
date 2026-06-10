@@ -31,10 +31,14 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage
 
+      # On main, the release workflow builds and publishes the real
+      # artifact; the dev build here is only useful on pull requests.
       - name: Build
+        if: github.event_name == 'pull_request'
         run: npm run build
 
       - name: Upload plugin artifact
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
         with:
           name: image-baker
