@@ -71,6 +71,7 @@ describe("right-clicking rendered images in Live Preview", () => {
 			"Extract image to file",
 			"Copy image",
 			"Reset size",
+			"Delete image",
 		]);
 	});
 

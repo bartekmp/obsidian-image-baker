@@ -38,9 +38,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   images without opening them.
 - Bake/Extract buttons on each entry of the image list sidebar, plus multi-select with
   "Select files"/"Select baked" shortcuts and a batch convert button for same-type selections.
-- Right-clicking a baked image shows extract/copy/reset-size actions (replacing Obsidian's
-  non-extensible widget menu); the file-explorer entry sits with the action group instead of
-  after "Delete".
+- Right-clicking a baked image shows extract/copy/reset-size/delete actions (replacing
+  Obsidian's non-extensible widget menu); the file-explorer entry sits with the action group
+  instead of after "Delete".
+- Pasted and dropped images record the note's folder, so extracting them later places the
+  file next to the note instead of the vault root.
 - Extraction restores images to the folder they were embedded from (recorded in the embed),
   falling back to the attachment folder when it no longer exists.
 - Image list sidebar view (ribbon button and command) showing every image of the active note;

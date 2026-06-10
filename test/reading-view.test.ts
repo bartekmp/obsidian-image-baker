@@ -54,6 +54,7 @@ describe("reading view context menu", () => {
 			"Extract image to file",
 			"Copy image",
 			"Reset size",
+			"Delete image",
 		]);
 
 		menu?.items[0]?.clickHandler?.();
@@ -101,6 +102,19 @@ describe("reading view context menu", () => {
 		await flushPromises();
 
 		expect(app.vault.contents.get("Trip.md")).toBe(`![photo.png](${src})`);
+	});
+
+	it("deletes a baked image from the note", async () => {
+		const src = `data:image/png;base64,${base64}`;
+		app.vault.addNote("Trip.md", `before ![photo.png](${src}) after`);
+		const img = renderEmbeddedImage(src, "Trip.md");
+
+		img.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+		MockMenu.instances[0]?.items[3]?.clickHandler?.();
+		await flushPromises();
+
+		expect(app.vault.contents.get("Trip.md")).toBe("before  after");
+		expect(app.vault.binaries.size).toBe(0);
 	});
 
 	it("notifies when the rendered image no longer matches the note", async () => {

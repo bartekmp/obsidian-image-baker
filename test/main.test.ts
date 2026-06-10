@@ -416,6 +416,31 @@ describe("ImageBakerPlugin", () => {
 		expect(MockNotice.messages).toEqual(["Embedded 1 image into the note."]);
 	});
 
+	it("pasting into a folder note records the folder, so extraction returns there", async () => {
+		const note = app.vault.addNote("journal/Trip.md", "");
+		const editor = new FakeEditor("");
+		const file = new File([sampleBytes(16)], "image.png", { type: "image/png" });
+		const evt = makeTransferEvent([file], "clipboardData");
+
+		fireTransfer("editor-paste", evt, editor, note);
+		await flushPromises();
+
+		expect(editor.replaced[0]).toMatch(/^!\[journal\/Trip \d{8}-\d{6}\.png\]/);
+
+		// Round trip: extract the pasted embed and check where it lands.
+		app.vault.contents.set("journal/Trip.md", editor.replaced[0] ?? "");
+		command("extract-all-images").editorCheckCallback?.(
+			false,
+			editor.asEditor(),
+			asInfo(note),
+		);
+		await flushPromises();
+
+		const created = [...app.vault.binaries.keys()];
+		expect(created).toHaveLength(1);
+		expect(created[0]).toMatch(/^journal\/Trip \d{8}-\d{6}\.png$/);
+	});
+
 	it("keeps the original name of dropped image files", async () => {
 		const note = app.vault.addNote("Trip.md", "");
 		const editor = new FakeEditor("");

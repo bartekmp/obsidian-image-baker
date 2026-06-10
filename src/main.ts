@@ -494,6 +494,7 @@ export default class ImageBakerPlugin extends Plugin {
 			const markdown = await buildTransferEmbeds(
 				files,
 				note.basename,
+				note.parent?.path ?? "",
 				this.settings,
 			);
 			editor.replaceSelection(markdown);
@@ -564,7 +565,23 @@ export default class ImageBakerPlugin extends Plugin {
 					),
 				),
 		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Delete image")
+				.setIcon("trash")
+				.onClick(() =>
+					void this.withEmbedBySrc(sourcePath, src, (file, embed) =>
+						this.deleteEmbed(file, embed),
+					),
+				),
+		);
 		menu.showAtMouseEvent(evt);
+	}
+
+	/** Removes the whole embed markdown from the note. */
+	private async deleteEmbed(file: TFile, embed: EmbeddedImage): Promise<void> {
+		await this.app.vault.process(file, (data) => data.replace(embed.raw, ""));
+		new Notice("Removed embedded image.");
 	}
 
 	private async resetEmbedSize(file: TFile, embed: EmbeddedImage): Promise<void> {

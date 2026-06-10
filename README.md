@@ -22,7 +22,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
   folder — it is baked straight into the note, no attachment file is ever created. Dropped files
   keep their real name; pasted screenshots get a clean `<note name> <timestamp>.png` name. If a
   transfer contains anything that is not a supported image within the size limit, Image Baker
-  stands back and Obsidian handles it normally.
+  stands back and Obsidian handles it normally. The note's folder is recorded in the embed, so
+  extracting a pasted image places the file next to its note.
 - **Convert existing images**: wiki embeds (`![[photo.png|300]]`) and markdown images
   (`![alt](photo.png)`) are converted in place — per image, per note, or in bulk.
 - **Optional optimization**: re-encode images to WebP or JPEG (configurable quality, optional
@@ -51,8 +52,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
   an image link in source mode, or an image file in the file explorer (*Embed image into notes
   that use it* — converts every note that links it, then trashes the file once nothing
   references it). Notes get *Embed images in this note* / *Extract images in this note* in the
-  file explorer too. On baked images the menu offers *Extract image to file*, *Copy image*, and
-  *Reset size*.
+  file explorer too. On baked images the menu offers *Extract image to file*, *Copy image*,
+  *Reset size*, and *Delete image*.
 - **Click-to-select** — clicking or right-clicking a rendered image selects its markdown, so the
   *Embed/Extract/Copy selected image* commands and menu actions apply to it directly.
 
