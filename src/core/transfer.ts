@@ -85,14 +85,20 @@ export function transferFilename(
 	return `${base} ${timestampSlug(now)}${suffix}.${extension}`;
 }
 
-/** Builds the markdown embeds for transferred images, one per line. */
+/**
+ * Builds the markdown embeds for transferred images, one per line. The
+ * note's folder is recorded in the alt text, so a later extraction
+ * places the file next to the note instead of in the vault root.
+ */
 export async function buildTransferEmbeds(
 	files: readonly TransferFile[],
 	noteBasename: string,
+	noteFolder: string,
 	settings: ImageBakerSettings,
 	now = new Date(),
 	reencode: Reencoder = canvasReencode,
 ): Promise<string> {
+	const prefix = noteFolder !== "" && noteFolder !== "/" ? `${noteFolder}/` : "";
 	const parts: string[] = [];
 	for (const [index, file] of files.entries()) {
 		let bytes = new Uint8Array(await file.arrayBuffer());
@@ -106,7 +112,14 @@ export async function buildTransferEmbeds(
 			transferFilename(file.name, noteBasename, mime, now, index, files.length),
 			mime,
 		);
-		parts.push(buildEmbeddedImageMarkdown(name, [], mime, bytesToBase64(bytes)));
+		parts.push(
+			buildEmbeddedImageMarkdown(
+				`${prefix}${name}`,
+				[],
+				mime,
+				bytesToBase64(bytes),
+			),
+		);
 	}
 	return parts.join("\n");
 }

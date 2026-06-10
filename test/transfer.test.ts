@@ -119,7 +119,7 @@ describe("buildTransferEmbeds", () => {
 			makeTransferFile("image.png", "image/png", bytes),
 		];
 
-		const markdown = await buildTransferEmbeds(files, "Trip", makeSettings(), NOW);
+		const markdown = await buildTransferEmbeds(files, "Trip", "", makeSettings(), NOW);
 		const lines = markdown.split("\n");
 
 		expect(lines).toEqual([
@@ -132,10 +132,36 @@ describe("buildTransferEmbeds", () => {
 		const markdown = await buildTransferEmbeds(
 			[makeTransferFile("a.png", "IMAGE/PNG")],
 			"Trip",
+			"",
 			makeSettings(),
 			NOW,
 		);
 		expect(markdown).toContain("data:image/png;base64,");
+	});
+
+	it("records the note's folder so extraction lands next to the note", async () => {
+		const bytes = sampleBytes(16);
+		const markdown = await buildTransferEmbeds(
+			[makeTransferFile("photo.png", "image/png", bytes)],
+			"Trip",
+			"journal/2026",
+			makeSettings(),
+			NOW,
+		);
+		expect(markdown).toBe(
+			`![journal/2026/photo.png](data:image/png;base64,${bytesToBase64(bytes)})`,
+		);
+	});
+
+	it("treats the vault root as no folder prefix", async () => {
+		const markdown = await buildTransferEmbeds(
+			[makeTransferFile("photo.png", "image/png")],
+			"Trip",
+			"/",
+			makeSettings(),
+			NOW,
+		);
+		expect(markdown).toContain("![photo.png](");
 	});
 
 	it("optimizes transferred images and renames them to the new format", async () => {
@@ -143,6 +169,7 @@ describe("buildTransferEmbeds", () => {
 		const markdown = await buildTransferEmbeds(
 			[makeTransferFile("photo.png", "image/png", sampleBytes(64))],
 			"Trip",
+			"",
 			makeSettings({ optimizeImages: true }),
 			NOW,
 			() => Promise.resolve(smaller),
