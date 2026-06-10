@@ -67,12 +67,15 @@ export class ImageListView extends ItemView {
 		await this.refresh();
 	}
 
-	async refresh(): Promise<void> {
-		const container = this.contentEl;
-		container.empty();
+	/** Increases on every refresh so stale async renders are discarded. */
+	private refreshGeneration = 0;
 
+	async refresh(): Promise<void> {
+		const generation = ++this.refreshGeneration;
+		const container = this.contentEl;
 		const file = this.app.workspace.getActiveFile();
 		if (!file || file.extension !== "md") {
+			container.empty();
 			container.createEl("p", {
 				text: "Open a note to list its images.",
 				cls: "image-baker-empty",
@@ -81,6 +84,10 @@ export class ImageListView extends ItemView {
 		}
 
 		const content = await this.app.vault.cachedRead(file);
+		if (generation !== this.refreshGeneration) {
+			return;
+		}
+		container.empty();
 		const items = listNoteImages(content);
 		this.plugin.logger.debug(
 			`Image list: ${items.length} image(s) in "${file.path}"`,

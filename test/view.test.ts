@@ -123,6 +123,17 @@ describe("ImageListView", () => {
 		expect(renderedTexts("li")).toHaveLength(1);
 	});
 
+	it("renders once when refreshes overlap", async () => {
+		app.activeFile = app.vault.addNote("Trip.md", "![[photo.png]]");
+		await view.onOpen();
+
+		void view.refresh();
+		void view.refresh();
+		await flushPromises();
+
+		expect(renderedTexts("li")).toHaveLength(1);
+	});
+
 	it("jumps to the image position when an entry is clicked", async () => {
 		const content = `start ![[photo.png]]`;
 		app.activeFile = app.vault.addNote("Trip.md", content);
