@@ -384,7 +384,13 @@ export class Setting {
 export class MenuItem {
 	title = "";
 	icon = "";
+	section = "";
 	clickHandler: (() => unknown) | null = null;
+
+	setSection(section: string): this {
+		this.section = section;
+		return this;
+	}
 
 	setTitle(title: string): this {
 		this.title = title;

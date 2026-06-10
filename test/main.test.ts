@@ -477,6 +477,8 @@ describe("ImageBakerPlugin", () => {
 		expect(imageMenu.items.map((item) => item.title)).toEqual([
 			"Embed image into notes that use it",
 		]);
+		// Grouped with the copy/open actions, not after "Delete".
+		expect(imageMenu.items[0]?.section).toBe("action");
 		expect(noteMenu.items).toHaveLength(0);
 	});
 

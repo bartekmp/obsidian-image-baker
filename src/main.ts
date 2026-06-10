@@ -25,6 +25,7 @@ import {
 import { buildTransferEmbeds, shouldEmbedTransfer } from "./core/transfer";
 import { Logger } from "./lib/logger";
 import {
+	buildEmbeddedImageMarkdown,
 	findEmbedBySrc,
 	findEmbeddedImages,
 	findImageFileLinks,
@@ -171,6 +172,7 @@ export default class ImageBakerPlugin extends Plugin {
 				if (file instanceof TFile && isImagePath(file.path)) {
 					menu.addItem((item) =>
 						item
+							.setSection("action")
 							.setTitle("Embed image into notes that use it")
 							.setIcon("image-plus")
 							.onClick(() => void this.embedFileEverywhere(file)),
@@ -290,11 +292,8 @@ export default class ImageBakerPlugin extends Plugin {
 		if (!editor || !file) {
 			return;
 		}
-		const link = this.linkForRenderedImage(
-			editor.getValue(),
-			target.getAttribute("src") ?? "",
-			file,
-		);
+		const src = target.getAttribute("src") ?? "";
+		const link = this.linkForRenderedImage(editor.getValue(), src, file);
 		if (!link) {
 			return;
 		}
@@ -302,6 +301,13 @@ export default class ImageBakerPlugin extends Plugin {
 			editor.offsetToPos(link.start),
 			editor.offsetToPos(link.end),
 		);
+		if (link.kind === "embedded") {
+			// Obsidian's widget menu for baked images is not extensible;
+			// suppress it and show ours instead.
+			evt.preventDefault();
+			evt.stopPropagation();
+			this.showBakedImageMenu(evt, file.path, src);
+		}
 	}
 
 	private linkForRenderedImage(
@@ -486,7 +492,7 @@ export default class ImageBakerPlugin extends Plugin {
 		}
 	}
 
-	/** Offers "Extract image to file" on baked images in reading view. */
+	/** Offers conversion actions on baked images in reading view. */
 	private attachReadingViewMenus(element: HTMLElement, sourcePath: string): void {
 		const images = element.querySelectorAll<HTMLImageElement>(
 			'img[src^="data:image/"]',
@@ -494,31 +500,65 @@ export default class ImageBakerPlugin extends Plugin {
 		for (const img of Array.from(images)) {
 			img.addEventListener("contextmenu", (event) => {
 				event.preventDefault();
-				const src = img.getAttribute("src") ?? "";
-				const menu = new Menu();
-				menu.addItem((item) =>
-					item
-						.setTitle("Extract image to file")
-						.setIcon("image-down")
-						.onClick(() =>
-							void this.withEmbedBySrc(sourcePath, src, (file, embed) =>
-								this.runExtract(file, embed),
-							),
-						),
-				);
-				menu.addItem((item) =>
-					item
-						.setTitle("Copy image to clipboard")
-						.setIcon("copy")
-						.onClick(() =>
-							void this.withEmbedBySrc(sourcePath, src, (_file, embed) =>
-								this.copyEmbed(embed),
-							),
-						),
-				);
-				menu.showAtMouseEvent(event);
+				this.showBakedImageMenu(event, sourcePath, img.getAttribute("src") ?? "");
 			});
 		}
+	}
+
+	/**
+	 * Context menu for a rendered baked image. Obsidian's own widget menu
+	 * cannot be extended, so this replaces it while keeping its actions
+	 * (copy image, reset size) alongside the extraction.
+	 */
+	private showBakedImageMenu(
+		evt: MouseEvent,
+		sourcePath: string,
+		src: string,
+	): void {
+		const menu = new Menu();
+		menu.addItem((item) =>
+			item
+				.setTitle("Extract image to file")
+				.setIcon("image-down")
+				.onClick(() =>
+					void this.withEmbedBySrc(sourcePath, src, (file, embed) =>
+						this.runExtract(file, embed),
+					),
+				),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Copy image")
+				.setIcon("copy")
+				.onClick(() =>
+					void this.withEmbedBySrc(sourcePath, src, (_file, embed) =>
+						this.copyEmbed(embed),
+					),
+				),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Reset size")
+				.setIcon("image")
+				.onClick(() =>
+					void this.withEmbedBySrc(sourcePath, src, (file, embed) =>
+						this.resetEmbedSize(file, embed),
+					),
+				),
+		);
+		menu.showAtMouseEvent(evt);
+	}
+
+	private async resetEmbedSize(file: TFile, embed: EmbeddedImage): Promise<void> {
+		if (embed.params.length === 0) {
+			return;
+		}
+		await this.app.vault.process(file, (data) =>
+			data.replace(
+				embed.raw,
+				buildEmbeddedImageMarkdown(embed.alt, [], embed.mime, embed.base64),
+			),
+		);
 	}
 
 	/** Resolves a rendered data-URI back to its embed, then acts on it. */

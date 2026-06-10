@@ -52,7 +52,8 @@ describe("reading view context menu", () => {
 		const menu = MockMenu.instances[0];
 		expect(menu?.items.map((item) => item.title)).toEqual([
 			"Extract image to file",
-			"Copy image to clipboard",
+			"Copy image",
+			"Reset size",
 		]);
 
 		menu?.items[0]?.clickHandler?.();
@@ -88,6 +89,18 @@ describe("reading view context menu", () => {
 		img.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
 
 		expect(MockMenu.instances).toHaveLength(0);
+	});
+
+	it("resets the size of a baked image", async () => {
+		const src = `data:image/png;base64,${base64}`;
+		app.vault.addNote("Trip.md", `![photo.png|300](${src})`);
+		const img = renderEmbeddedImage(src, "Trip.md");
+
+		img.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+		MockMenu.instances[0]?.items[2]?.clickHandler?.();
+		await flushPromises();
+
+		expect(app.vault.contents.get("Trip.md")).toBe(`![photo.png](${src})`);
 	});
 
 	it("notifies when the rendered image no longer matches the note", async () => {
