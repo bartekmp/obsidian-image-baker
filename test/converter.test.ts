@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+	embedFileAcrossNotes,
 	embedImages,
 	extractImages,
 	formatEmbedReport,
 	formatExtractReport,
+	formatFileEmbedReport,
 } from "../src/core/converter";
 import { bytesToBase64 } from "../src/lib/base64";
 import { Logger } from "../src/lib/logger";
@@ -476,6 +478,82 @@ describe("extractImages", () => {
 
 		expect(report.extracted).toBe(1);
 		expect(app.vault.contents.get("Trip.md")).toBe("![[a.png]] ![[a.png]]");
+	});
+});
+
+describe("embedFileAcrossNotes", () => {
+	let app: FakeApp;
+
+	beforeEach(() => {
+		app = new FakeApp();
+	});
+
+	it("embeds the image in every note that links it, then trashes it", async () => {
+		const image = app.vault.addBinary("pics/photo.png", bytes);
+		app.vault.addNote("One.md", "![[photo.png]]");
+		app.vault.addNote("Two.md", "a ![pic](pics/photo.png) b");
+		app.vault.addNote("Other.md", "no images");
+		app.resolvedLinks["One.md"] = { "pics/photo.png": 1 };
+		app.resolvedLinks["Two.md"] = { "pics/photo.png": 1 };
+
+		const report = await embedFileAcrossNotes(
+			app.asApp(),
+			image,
+			makeSettings(),
+			logger,
+		);
+
+		expect(report).toMatchObject({
+			notes: 2,
+			embedded: 2,
+			deleted: true,
+			failures: [],
+		});
+		expect(app.vault.contents.get("One.md")).toContain("data:image/png;base64,");
+		expect(app.vault.contents.get("Two.md")).toContain("data:image/png;base64,");
+		expect(app.trashed).toEqual(["pics/photo.png"]);
+	});
+
+	it("keeps the file when a note still references it after embedding", async () => {
+		const image = app.vault.addBinary("big.png", sampleBytes(2048));
+		app.vault.addNote("One.md", "![[big.png]]");
+		app.resolvedLinks["One.md"] = { "big.png": 1 };
+
+		// The size limit prevents embedding, so the link survives.
+		const report = await embedFileAcrossNotes(
+			app.asApp(),
+			image,
+			makeSettings({ maxEmbedFileSizeKB: 1 }),
+			logger,
+		);
+
+		expect(report).toMatchObject({ notes: 0, embedded: 0, deleted: false });
+		expect(app.trashed).toEqual([]);
+	});
+
+	it("reports when nothing links the image", async () => {
+		const image = app.vault.addBinary("photo.png", bytes);
+
+		const report = await embedFileAcrossNotes(
+			app.asApp(),
+			image,
+			makeSettings(),
+			logger,
+		);
+
+		expect(report).toMatchObject({ notes: 0, embedded: 0, deleted: false });
+		expect(formatFileEmbedReport(report)).toBe("No notes link to this image.");
+	});
+
+	it("formats a full report", () => {
+		expect(
+			formatFileEmbedReport({
+				notes: 2,
+				embedded: 3,
+				deleted: true,
+				failures: [],
+			}),
+		).toBe("Embedded 3 links across 2 notes, trashed the source file.");
 	});
 });
 

@@ -1,9 +1,9 @@
 import {
+	TFile,
 	TFolder,
 	normalizePath,
 	type App,
 	type FileManager,
-	type TFile,
 } from "obsidian";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
 import {
@@ -371,6 +371,105 @@ export async function extractImages(
 	}
 
 	return report;
+}
+
+export interface FileEmbedReport {
+	notes: number;
+	embedded: number;
+	deleted: boolean;
+	failures: string[];
+}
+
+/**
+ * Embeds every link to the given image across all notes that reference
+ * it. The source file is trashed only once all notes are rewritten and
+ * none of them still links to it.
+ */
+export async function embedFileAcrossNotes(
+	app: App,
+	image: TFile,
+	settings: ImageBakerSettings,
+	logger: Logger,
+	reencode: Reencoder = canvasReencode,
+): Promise<FileEmbedReport> {
+	const report: FileEmbedReport = {
+		notes: 0,
+		embedded: 0,
+		deleted: false,
+		failures: [],
+	};
+	const notes: TFile[] = [];
+	for (const [source, targets] of Object.entries(
+		app.metadataCache.resolvedLinks,
+	)) {
+		if ((targets[image.path] ?? 0) > 0) {
+			const note = app.vault.getAbstractFileByPath(source);
+			if (note instanceof TFile) {
+				notes.push(note);
+			}
+		}
+	}
+
+	// Deletion is decided once at the end; per-note deletion would consult
+	// a metadata cache that has not re-indexed the rewritten notes yet.
+	const keepSources = { ...settings, deleteSourceFiles: false };
+	for (const note of notes) {
+		const content = await app.vault.read(note);
+		const links = findImageFileLinks(content).filter(
+			(link) =>
+				app.metadataCache.getFirstLinkpathDest(imageLinkTarget(link), note.path)
+					?.path === image.path,
+		);
+		if (links.length === 0) {
+			continue;
+		}
+		const sub = await embedImages(app, note, keepSources, logger, links, reencode);
+		if (sub.embedded > 0) {
+			report.notes++;
+		}
+		report.embedded += sub.embedded;
+		report.failures.push(...sub.failures);
+	}
+
+	if (settings.deleteSourceFiles && report.embedded > 0) {
+		let referenced = false;
+		for (const note of notes) {
+			if (await noteStillReferences(app, note, image.path)) {
+				referenced = true;
+				break;
+			}
+		}
+		if (referenced) {
+			logger.info(`Keeping "${image.path}": still referenced by a note`);
+		} else {
+			try {
+				await app.fileManager.trashFile(image);
+				report.deleted = true;
+				logger.debug(`Trashed "${image.path}"`);
+			} catch (error) {
+				report.failures.push(`Failed to delete "${image.path}"`);
+				logger.error(`Failed to delete "${image.path}"`, error);
+			}
+		}
+	}
+
+	return report;
+}
+
+export function formatFileEmbedReport(report: FileEmbedReport): string {
+	if (report.notes === 0 && report.failures.length === 0) {
+		return "No notes link to this image.";
+	}
+	const parts = [
+		`Embedded ${plural(report.embedded, "link")} across ${plural(report.notes, "note")}`,
+	];
+	if (report.deleted) {
+		parts.push("trashed the source file");
+	}
+	if (report.failures.length > 0) {
+		parts.push(`${report.failures.length} failed`);
+	}
+	return `${parts.join(", ")}.`;
 }
 
 export function formatEmbedReport(report: EmbedReport): string {

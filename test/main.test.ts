@@ -462,6 +462,43 @@ describe("ImageBakerPlugin", () => {
 		expect(editor.replaced).toHaveLength(0);
 	});
 
+	it("offers embedding from the file explorer menu for images only", () => {
+		const handler = app.workspaceHandlers.get("file-menu") as (
+			...args: unknown[]
+		) => void;
+		const image = app.vault.addBinary("photo.png", bytes);
+		const note = app.vault.addNote("One.md", "![[photo.png]]");
+
+		const imageMenu = new MockMenu();
+		handler(imageMenu, image);
+		const noteMenu = new MockMenu();
+		handler(noteMenu, note);
+
+		expect(imageMenu.items.map((item) => item.title)).toEqual([
+			"Embed image into notes that use it",
+		]);
+		expect(noteMenu.items).toHaveLength(0);
+	});
+
+	it("embeds a file into its notes from the file explorer menu", async () => {
+		const handler = app.workspaceHandlers.get("file-menu") as (
+			...args: unknown[]
+		) => void;
+		const image = app.vault.addBinary("photo.png", bytes);
+		app.vault.addNote("One.md", "![[photo.png]]");
+		app.resolvedLinks["One.md"] = { "photo.png": 1 };
+
+		const menu = new MockMenu();
+		handler(menu, image);
+		menu.items[0]?.clickHandler?.();
+		await flushPromises();
+
+		expect(app.vault.contents.get("One.md")).toContain("data:image/png;base64,");
+		expect(MockNotice.messages).toEqual([
+			"Embedded 1 link across 1 note, trashed the source file.",
+		]);
+	});
+
 	it("reports failures with a notice instead of throwing", async () => {
 		plugin.logger.setLevel("off");
 		const orphan = new MockTFile();

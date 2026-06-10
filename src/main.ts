@@ -10,10 +10,12 @@ import {
 } from "obsidian";
 import { imageFoldExtension } from "./editor/fold";
 import {
+	embedFileAcrossNotes,
 	embedImages,
 	extractImages,
 	formatEmbedReport,
 	formatExtractReport,
+	formatFileEmbedReport,
 } from "./core/converter";
 import {
 	copyEmbeddedImage,
@@ -31,6 +33,7 @@ import {
 	type EmbeddedImage,
 	type ImageFileLink,
 } from "./lib/markdown";
+import { isImagePath } from "./lib/mime";
 import { normalizeSettings, type ImageBakerSettings } from "./settings";
 import { ImageBakerSettingTab } from "./settings-tab";
 import { BatchModal } from "./ui/batch-modal";
@@ -160,6 +163,19 @@ export default class ImageBakerPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, info) => {
 				this.populateEditorMenu(menu, editor, info);
+			}),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("file-menu", (menu, file) => {
+				if (file instanceof TFile && isImagePath(file.path)) {
+					menu.addItem((item) =>
+						item
+							.setTitle("Embed image into notes that use it")
+							.setIcon("image-plus")
+							.onClick(() => void this.embedFileEverywhere(file)),
+					);
+				}
 			}),
 		);
 
@@ -523,6 +539,20 @@ export default class ImageBakerPlugin extends Plugin {
 			return;
 		}
 		await action(file, embed);
+	}
+
+	private async embedFileEverywhere(image: TFile): Promise<void> {
+		try {
+			const report = await embedFileAcrossNotes(
+				this.app,
+				image,
+				this.settings,
+				this.logger,
+			);
+			new Notice(formatFileEmbedReport(report));
+		} catch (error) {
+			this.reportFailure("Failed to embed image", error);
+		}
 	}
 
 	private async copyEmbed(embed: EmbeddedImage): Promise<void> {
