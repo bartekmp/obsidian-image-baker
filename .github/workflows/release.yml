@@ -11,7 +11,7 @@ permissions:
 jobs:
   release:
     name: Build and publish release
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6

@@ -8,7 +8,7 @@ on:
 jobs:
   verify:
     name: Lint, test, and build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -46,7 +46,7 @@ jobs:
   commitlint:
     name: Check commit messages
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
