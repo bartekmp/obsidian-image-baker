@@ -1,4 +1,8 @@
-# Image Baker 🍞
+<p align="center">
+  <img src="assets/obsidian-image-baker.png" alt="Image Baker — a bread loaf shaped like the Obsidian gem" width="200">
+</p>
+
+# Image Baker
 
 [![CI](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml/badge.svg)](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml)
 
