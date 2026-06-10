@@ -26,7 +26,7 @@ import {
 	findEmbedBySrc,
 	findEmbeddedImages,
 	findImageFileLinks,
-	findLinkAtOffset,
+	imageLinkTarget,
 	type AnyImageLink,
 	type EmbeddedImage,
 	type ImageFileLink,
@@ -72,7 +72,7 @@ export default class ImageBakerPlugin extends Plugin {
 
 		this.addCommand({
 			id: "embed-image-at-cursor",
-			name: "Embed image under cursor",
+			name: "Embed selected image",
 			editorCheckCallback: (checking, editor, info) =>
 				this.runOnLink(
 					checking,
@@ -85,7 +85,7 @@ export default class ImageBakerPlugin extends Plugin {
 
 		this.addCommand({
 			id: "extract-image-at-cursor",
-			name: "Extract image under cursor",
+			name: "Extract selected image",
 			editorCheckCallback: (checking, editor, info) =>
 				this.runOnLink(
 					checking,
@@ -124,7 +124,7 @@ export default class ImageBakerPlugin extends Plugin {
 
 		this.addCommand({
 			id: "copy-image-at-cursor",
-			name: "Copy image under cursor to clipboard",
+			name: "Copy selected image to clipboard",
 			editorCheckCallback: (checking, editor, info) =>
 				this.runOnLink(
 					checking,
@@ -166,6 +166,13 @@ export default class ImageBakerPlugin extends Plugin {
 		this.registerMarkdownPostProcessor((element, context) => {
 			this.attachReadingViewMenus(element, context.sourcePath);
 		});
+
+		this.registerDomEvent(
+			document,
+			"contextmenu",
+			(evt) => this.selectClickedImage(evt),
+			{ capture: true },
+		);
 
 		this.registerEvent(
 			this.app.workspace.on("editor-paste", (evt, editor, info) => {
@@ -233,10 +240,74 @@ export default class ImageBakerPlugin extends Plugin {
 		await this.app.workspace.revealLeaf(leaf);
 	}
 
-	private linkAtCursor(editor: Editor): AnyImageLink | null {
-		return findLinkAtOffset(
+	/**
+	 * The image link under the cursor, or — when there is a selection, as
+	 * after clicking a rendered image — the first link it overlaps.
+	 */
+	private selectedLink(editor: Editor): AnyImageLink | null {
+		const content = editor.getValue();
+		const from = editor.posToOffset(editor.getCursor("from"));
+		const to = editor.posToOffset(editor.getCursor("to"));
+		const links: AnyImageLink[] = [
+			...findImageFileLinks(content),
+			...findEmbeddedImages(content),
+		];
+		if (from === to) {
+			return links.find((link) => link.start <= from && from <= link.end) ?? null;
+		}
+		return links.find((link) => link.start < to && link.end > from) ?? null;
+	}
+
+	/**
+	 * Right-clicking a rendered image in Live Preview selects its markdown
+	 * first, so the editor context menu offers the conversion actions and
+	 * the "selected image" commands apply to it.
+	 */
+	private selectClickedImage(evt: MouseEvent): void {
+		const target = evt.target;
+		if (!(target instanceof HTMLImageElement) || !target.closest(".cm-content")) {
+			return;
+		}
+		const info = this.app.workspace.activeEditor;
+		const editor = info?.editor;
+		const file = info?.file;
+		if (!editor || !file) {
+			return;
+		}
+		const link = this.linkForRenderedImage(
 			editor.getValue(),
-			editor.posToOffset(editor.getCursor()),
+			target.getAttribute("src") ?? "",
+			file,
+		);
+		if (!link) {
+			return;
+		}
+		editor.setSelection(
+			editor.offsetToPos(link.start),
+			editor.offsetToPos(link.end),
+		);
+	}
+
+	private linkForRenderedImage(
+		content: string,
+		src: string,
+		file: TFile,
+	): AnyImageLink | null {
+		if (src.startsWith("data:image/")) {
+			return findEmbedBySrc(content, src);
+		}
+		const cleanSrc = src.split("?")[0];
+		return (
+			findImageFileLinks(content).find((link) => {
+				const resolved = this.app.metadataCache.getFirstLinkpathDest(
+					imageLinkTarget(link),
+					file.path,
+				);
+				return (
+					resolved !== null &&
+					this.app.vault.getResourcePath(resolved).split("?")[0] === cleanSrc
+				);
+			}) ?? null
 		);
 	}
 
@@ -266,7 +337,7 @@ export default class ImageBakerPlugin extends Plugin {
 		if (!file) {
 			return false;
 		}
-		const link = this.linkAtCursor(editor);
+		const link = this.selectedLink(editor);
 		if (!link || !matches(link)) {
 			return false;
 		}
@@ -320,7 +391,7 @@ export default class ImageBakerPlugin extends Plugin {
 		if (!file) {
 			return;
 		}
-		const link = this.linkAtCursor(editor);
+		const link = this.selectedLink(editor);
 		if (!link) {
 			return;
 		}

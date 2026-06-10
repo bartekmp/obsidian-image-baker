@@ -130,6 +130,17 @@ export class Plugin {
 		return processor;
 	}
 
+	domEvents: { type: string; handler: (evt: unknown) => unknown }[] = [];
+
+	registerDomEvent(
+		_el: unknown,
+		type: string,
+		handler: (evt: unknown) => unknown,
+		_options?: unknown,
+	): void {
+		this.domEvents.push({ type, handler });
+	}
+
 	addRibbonIcon(
 		icon: string,
 		title: string,

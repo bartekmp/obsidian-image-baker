@@ -106,6 +106,10 @@ export class FakeVault {
 	getMarkdownFiles(): TFile[] {
 		return [...this.files.values()].filter((file) => file.extension === "md");
 	}
+
+	getResourcePath(file: TFile): string {
+		return `app://vault/${file.path}?1`;
+	}
 }
 
 export class FakeLeaf {
@@ -181,6 +185,8 @@ export class FakeApp {
 	};
 
 	workspace = {
+		/** Set by tests to simulate the active Live Preview editor. */
+		activeEditor: null as { editor: Editor; file: TFile } | null,
 		on: (name: string, handler: (...args: never[]) => unknown): unknown => {
 			this.workspaceHandlers.set(name, handler);
 			return { event: name };
@@ -258,6 +264,13 @@ export class FakeEditor {
 
 	offsetToPos(offset: number): { line: number; ch: number } {
 		return { line: 0, ch: offset };
+	}
+
+	setSelection(
+		anchor: { line: number; ch: number },
+		head: { line: number; ch: number },
+	): void {
+		this.selectionRange = { from: anchor.ch, to: head.ch };
 	}
 
 	setCursor(pos: { line: number; ch: number }): void {

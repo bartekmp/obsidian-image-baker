@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import type { MarkdownFileInfo, PluginManifest, TFile } from "obsidian";
 import { beforeEach, describe, expect, it } from "vitest";
 import { bytesToBase64 } from "../src/lib/base64";
@@ -181,6 +182,28 @@ describe("ImageBakerPlugin", () => {
 		expect(extractCommand?.(true, onEmbed, info)).toBe(true);
 		expect(extractCommand?.(true, onFileLink, info)).toBe(false);
 		expect(embedCommand?.(true, onNothing, info)).toBe(false);
+	});
+
+	it("treats a selection covering an image as the selected image", async () => {
+		app.vault.addBinary("a.png", bytes);
+		const content = "text ![[a.png]] more";
+		const note = app.vault.addNote("Trip.md", content);
+		const editor = new FakeEditor(content);
+		// Clicking a rendered image selects its whole markdown range.
+		editor.selectionRange = {
+			from: content.indexOf("![["),
+			to: content.indexOf("]]") + 2,
+		};
+
+		const applicable = command("embed-image-at-cursor").editorCheckCallback?.(
+			false,
+			editor.asEditor(),
+			asInfo(note),
+		);
+		await flushPromises();
+
+		expect(applicable).toBe(true);
+		expect(app.vault.contents.get("Trip.md")).toContain("data:image/png;base64,");
 	});
 
 	it("embeds a single image from the cursor command", async () => {
