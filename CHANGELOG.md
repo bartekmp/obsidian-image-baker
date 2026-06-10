@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.0...1.0.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* adjust the release artifacts ([9cda15a](https://github.com/bartekmp/obsidian-image-baker/commit/9cda15a49dcb1578005cdeced9d276cb8f168f81))
+
 # 1.0.0 (2026-06-10)
 
 
