@@ -39,6 +39,11 @@ export interface EmbeddedImage extends BaseLink {
 export type ImageFileLink = WikiImageLink | MarkdownImageLink;
 export type AnyImageLink = ImageFileLink | EmbeddedImage;
 
+/** The vault path or link text an image file link points at. */
+export function imageLinkTarget(link: ImageFileLink): string {
+	return link.kind === "wiki" ? link.linkpath : link.target;
+}
+
 export interface Replacement {
 	start: number;
 	end: number;

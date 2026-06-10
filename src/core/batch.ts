@@ -1,8 +1,13 @@
 import type { App, TFile } from "obsidian";
 import { approximateBase64Bytes, formatByteSize } from "../lib/bytes";
 import type { Logger } from "../lib/logger";
-import { findEmbeddedImages, findImageFileLinks } from "../lib/markdown";
+import {
+	findEmbeddedImages,
+	findImageFileLinks,
+	imageLinkTarget,
+} from "../lib/markdown";
 import { mimeFromExtension } from "../lib/mime";
+import { plural } from "../lib/text";
 import type { ImageBakerSettings } from "../settings";
 import { embedImages, extractImages } from "./converter";
 
@@ -48,8 +53,10 @@ export async function planBatch(
 		let bytes = 0;
 		if (direction === "embed") {
 			for (const link of findImageFileLinks(content)) {
-				const target = link.kind === "wiki" ? link.linkpath : link.target;
-				const image = app.metadataCache.getFirstLinkpathDest(target, file.path);
+				const image = app.metadataCache.getFirstLinkpathDest(
+					imageLinkTarget(link),
+					file.path,
+				);
 				if (!image || !mimeFromExtension(image.extension)) {
 					continue;
 				}
@@ -124,10 +131,6 @@ export async function runBatch(
 		onProgress(index + 1, files.length);
 	}
 	return result;
-}
-
-function plural(count: number, noun: string): string {
-	return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 export function formatBatchPlan(

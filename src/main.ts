@@ -51,14 +51,14 @@ export default class ImageBakerPlugin extends Plugin {
 			id: "embed-all-images",
 			name: "Embed all images in the current note",
 			editorCheckCallback: (checking, _editor, info) =>
-				this.runOnNote(checking, info, (file) => this.embedAll(file)),
+				this.runOnNote(checking, info, (file) => this.runEmbed(file)),
 		});
 
 		this.addCommand({
 			id: "extract-all-images",
 			name: "Extract all embedded images to files",
 			editorCheckCallback: (checking, _editor, info) =>
-				this.runOnNote(checking, info, (file) => this.extractAll(file)),
+				this.runOnNote(checking, info, (file) => this.runExtract(file)),
 		});
 
 		this.addCommand({
@@ -70,7 +70,7 @@ export default class ImageBakerPlugin extends Plugin {
 					editor,
 					info,
 					(link): link is ImageFileLink => link.kind !== "embedded",
-					(file, link) => this.embedOne(file, link),
+					(file, link) => this.runEmbed(file, link),
 				),
 		});
 
@@ -83,7 +83,7 @@ export default class ImageBakerPlugin extends Plugin {
 					editor,
 					info,
 					(link): link is EmbeddedImage => link.kind === "embedded",
-					(file, link) => this.extractOne(file, link),
+					(file, link) => this.runExtract(file, link),
 				),
 		});
 
@@ -246,14 +246,14 @@ export default class ImageBakerPlugin extends Plugin {
 				item
 					.setTitle("Extract image to file")
 					.setIcon("image-down")
-					.onClick(() => void this.extractOne(file, link)),
+					.onClick(() => void this.runExtract(file, link)),
 			);
 		} else {
 			menu.addItem((item) =>
 				item
 					.setTitle("Embed image into note")
 					.setIcon("image-plus")
-					.onClick(() => void this.embedOne(file, link)),
+					.onClick(() => void this.runEmbed(file, link)),
 			);
 		}
 	}
@@ -347,24 +347,10 @@ export default class ImageBakerPlugin extends Plugin {
 			new Notice("Could not locate this embedded image in the note.");
 			return;
 		}
-		await this.extractOne(file, embed);
+		await this.runExtract(file, embed);
 	}
 
-	private async embedAll(file: TFile): Promise<void> {
-		try {
-			const report = await embedImages(
-				this.app,
-				file,
-				this.settings,
-				this.logger,
-			);
-			new Notice(formatEmbedReport(report));
-		} catch (error) {
-			this.reportFailure("Failed to embed images", error);
-		}
-	}
-
-	private async embedOne(file: TFile, link: ImageFileLink): Promise<void> {
+	private async runEmbed(file: TFile, link?: ImageFileLink): Promise<void> {
 		try {
 			const report = await embedImages(
 				this.app,
@@ -375,25 +361,14 @@ export default class ImageBakerPlugin extends Plugin {
 			);
 			new Notice(formatEmbedReport(report));
 		} catch (error) {
-			this.reportFailure("Failed to embed image", error);
-		}
-	}
-
-	private async extractAll(file: TFile): Promise<void> {
-		try {
-			const report = await extractImages(
-				this.app,
-				file,
-				this.settings,
-				this.logger,
+			this.reportFailure(
+				link ? "Failed to embed image" : "Failed to embed images",
+				error,
 			);
-			new Notice(formatExtractReport(report));
-		} catch (error) {
-			this.reportFailure("Failed to extract images", error);
 		}
 	}
 
-	private async extractOne(file: TFile, link: EmbeddedImage): Promise<void> {
+	private async runExtract(file: TFile, link?: EmbeddedImage): Promise<void> {
 		try {
 			const report = await extractImages(
 				this.app,
@@ -404,7 +379,10 @@ export default class ImageBakerPlugin extends Plugin {
 			);
 			new Notice(formatExtractReport(report));
 		} catch (error) {
-			this.reportFailure("Failed to extract image", error);
+			this.reportFailure(
+				link ? "Failed to extract image" : "Failed to extract images",
+				error,
+			);
 		}
 	}
 

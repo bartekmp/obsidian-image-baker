@@ -12,9 +12,11 @@ import {
 	buildImageFileLink,
 	findEmbeddedImages,
 	findImageFileLinks,
+	imageLinkTarget,
 	type EmbeddedImage,
 	type ImageFileLink,
 } from "../lib/markdown";
+import { plural } from "../lib/text";
 import { extensionFromMime, mimeFromExtension } from "../lib/mime";
 import type { ImageBakerSettings } from "../settings";
 import { canvasReencode, optimizeImage, type Reencoder } from "./optimize";
@@ -30,10 +32,6 @@ export interface ExtractReport {
 	extracted: number;
 	createdPaths: string[];
 	failures: string[];
-}
-
-function linkTarget(link: ImageFileLink): string {
-	return link.kind === "wiki" ? link.linkpath : link.target;
 }
 
 /**
@@ -78,7 +76,7 @@ async function noteStillReferences(
 	const content = await app.vault.read(note);
 	return findImageFileLinks(content).some(
 		(link) =>
-			app.metadataCache.getFirstLinkpathDest(linkTarget(link), note.path)
+			app.metadataCache.getFirstLinkpathDest(imageLinkTarget(link), note.path)
 				?.path === targetPath,
 	);
 }
@@ -143,7 +141,7 @@ export async function embedImages(
 		if (replacementByRaw.has(link.raw)) {
 			continue;
 		}
-		const target = linkTarget(link);
+		const target = imageLinkTarget(link);
 		const file = app.metadataCache.getFirstLinkpathDest(target, note.path);
 		if (!file) {
 			report.failures.push(`Could not resolve "${target}"`);
@@ -318,10 +316,6 @@ export async function extractImages(
 	}
 
 	return report;
-}
-
-function plural(count: number, noun: string): string {
-	return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 export function formatEmbedReport(report: EmbedReport): string {
