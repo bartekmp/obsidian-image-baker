@@ -54,6 +54,18 @@ describe("ImageListView", () => {
 		return contentOf(view).findAll(tag).map((el) => el.text);
 	}
 
+	function buttonByText(text: string): FakeElement {
+		const button = contentOf(view)
+			.findAll("button")
+			.find((el) => el.text === text);
+		if (!button) {
+			throw new Error(`No button labeled "${text}"`);
+		}
+		return button;
+	}
+
+	const clickEvent = { stopPropagation: (): void => undefined };
+
 	it("describes itself", () => {
 		expect(view.getViewType()).toBe(IMAGE_LIST_VIEW_TYPE);
 		expect(view.getDisplayText()).toBe("Note images");
@@ -125,14 +137,19 @@ describe("ImageListView", () => {
 		expect(renderedTexts("li")).toHaveLength(1);
 	});
 
-	it("renders a convert button per item", async () => {
+	it("renders the toolbar and a convert button per item", async () => {
 		app.activeFile = app.vault.addNote(
 			"Trip.md",
 			`![[photo.png]] and ![pic.png](data:image/png;base64,${base64})`,
 		);
 		await view.onOpen();
 
-		expect(renderedTexts("button")).toEqual(["Bake", "Extract"]);
+		expect(renderedTexts("button")).toEqual([
+			"Select files",
+			"Select baked",
+			"Bake",
+			"Extract",
+		]);
 	});
 
 	it("bakes a file image from its button without navigating", async () => {
@@ -140,14 +157,12 @@ describe("ImageListView", () => {
 		app.activeFile = app.vault.addNote("Trip.md", "![[photo.png]]");
 		await view.onOpen();
 
-		contentOf(view)
-			.findAll("button")[0]
-			?.onclick?.({ stopPropagation: () => undefined });
+		buttonByText("Bake").onclick?.(clickEvent);
 		await flushPromises();
 
 		expect(app.vault.contents.get("Trip.md")).toContain("data:image/png;base64,");
 		expect(app.centerLeaf.openedFiles).toHaveLength(0);
-		expect(renderedTexts("button")).toEqual(["Extract"]);
+		expect(renderedTexts("button")).toContain("Extract");
 	});
 
 	it("extracts a baked image from its button", async () => {
@@ -157,13 +172,74 @@ describe("ImageListView", () => {
 		);
 		await view.onOpen();
 
-		contentOf(view)
-			.findAll("button")[0]
-			?.onclick?.({ stopPropagation: () => undefined });
+		buttonByText("Extract").onclick?.(clickEvent);
 		await flushPromises();
 
 		expect(app.vault.contents.get("Trip.md")).toBe("![[photo.png]]");
-		expect(renderedTexts("button")).toEqual(["Bake"]);
+		expect(renderedTexts("button")).toContain("Bake");
+	});
+
+	it("selects all baked images and batch-extracts them", async () => {
+		app.activeFile = app.vault.addNote(
+			"Trip.md",
+			`![[file.png]] ![a.png](data:image/png;base64,${base64}) ![b.png](data:image/png;base64,${base64})`,
+		);
+		await view.onOpen();
+
+		buttonByText("Select baked").onclick?.(clickEvent);
+		expect(
+			contentOf(view)
+				.findAll("input")
+				.map((box) => box.checked),
+		).toEqual([false, true, true]);
+
+		buttonByText("Extract 2").onclick?.(clickEvent);
+		await flushPromises();
+
+		const content = app.vault.contents.get("Trip.md") ?? "";
+		expect(content).toBe("![[file.png]] ![[a.png]] ![[b.png]]");
+	});
+
+	it("selects all file images and batch-bakes them", async () => {
+		app.vault.addBinary("a.png", sampleBytes(8));
+		app.vault.addBinary("b.png", sampleBytes(8));
+		app.activeFile = app.vault.addNote("Trip.md", "![[a.png]] ![[b.png]]");
+		await view.onOpen();
+
+		buttonByText("Select files").onclick?.(clickEvent);
+		buttonByText("Bake 2").onclick?.(clickEvent);
+		await flushPromises();
+
+		const content = app.vault.contents.get("Trip.md") ?? "";
+		expect(content.match(/data:image\/png;base64,/g)).toHaveLength(2);
+	});
+
+	it("offers no batch action for a mixed selection", async () => {
+		app.activeFile = app.vault.addNote(
+			"Trip.md",
+			`![[file.png]] ![a.png](data:image/png;base64,${base64})`,
+		);
+		await view.onOpen();
+
+		const boxes = contentOf(view).findAll("input");
+		boxes[0]?.onclick?.(clickEvent);
+		contentOf(view).findAll("input")[1]?.onclick?.(clickEvent);
+
+		const buttons = renderedTexts("button");
+		expect(buttons).not.toContain("Bake 2");
+		expect(buttons.some((text) => /^(Bake|Extract) \d/.test(text))).toBe(false);
+	});
+
+	it("toggles a single checkbox into a batch action", async () => {
+		app.vault.addBinary("a.png", sampleBytes(8));
+		app.activeFile = app.vault.addNote("Trip.md", "![[a.png]]");
+		await view.onOpen();
+
+		contentOf(view).findAll("input")[0]?.onclick?.(clickEvent);
+		expect(renderedTexts("button")).toContain("Bake 1");
+
+		contentOf(view).findAll("input")[0]?.onclick?.(clickEvent);
+		expect(renderedTexts("button")).not.toContain("Bake 1");
 	});
 
 	it("renders once when refreshes overlap", async () => {

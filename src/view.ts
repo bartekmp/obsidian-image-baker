@@ -4,6 +4,8 @@ import {
 	findEmbeddedImages,
 	findImageFileLinks,
 	type AnyImageLink,
+	type EmbeddedImage,
+	type ImageFileLink,
 } from "./lib/markdown";
 import type ImageBakerPlugin from "./main";
 
@@ -76,17 +78,19 @@ export class ImageListView extends ItemView {
 
 	/** Increases on every refresh so stale async renders are discarded. */
 	private refreshGeneration = 0;
+	private items: ImageListItem[] = [];
+	private currentFile: TFile | null = null;
+	/** Multi-selection, keyed by each item's start offset. */
+	private readonly selected = new Set<number>();
 
 	async refresh(): Promise<void> {
 		const generation = ++this.refreshGeneration;
-		const container = this.contentEl;
 		const file = this.app.workspace.getActiveFile();
 		if (!file || file.extension !== "md") {
-			container.empty();
-			container.createEl("p", {
-				text: "Open a note to list its images.",
-				cls: "image-baker-empty",
-			});
+			this.currentFile = null;
+			this.items = [];
+			this.selected.clear();
+			this.renderMessage("Open a note to list its images.");
 			return;
 		}
 
@@ -94,22 +98,59 @@ export class ImageListView extends ItemView {
 		if (generation !== this.refreshGeneration) {
 			return;
 		}
-		container.empty();
-		const items = listNoteImages(content);
+		this.currentFile = file;
+		this.items = listNoteImages(content);
+		this.selected.clear();
 		this.plugin.logger.debug(
-			`Image list: ${items.length} image(s) in "${file.path}"`,
+			`Image list: ${this.items.length} image(s) in "${file.path}"`,
 		);
-		if (items.length === 0) {
-			container.createEl("p", {
-				text: "No images in this note.",
-				cls: "image-baker-empty",
-			});
+		this.renderList();
+	}
+
+	private renderMessage(message: string): void {
+		const container = this.contentEl;
+		container.empty();
+		container.createEl("p", { text: message, cls: "image-baker-empty" });
+	}
+
+	private renderList(): void {
+		const file = this.currentFile;
+		if (!file) {
 			return;
+		}
+		if (this.items.length === 0) {
+			this.renderMessage("No images in this note.");
+			return;
+		}
+		const container = this.contentEl;
+		container.empty();
+
+		const toolbar = container.createEl("div", { cls: "image-baker-toolbar" });
+		const selectFiles = toolbar.createEl("button", { text: "Select files" });
+		selectFiles.onclick = (): void => this.selectGroup("file");
+		const selectBaked = toolbar.createEl("button", { text: "Select baked" });
+		selectBaked.onclick = (): void => this.selectGroup("embedded");
+		const batch = this.batchAction();
+		if (batch) {
+			const button = toolbar.createEl("button", {
+				text: batch.label,
+				cls: "mod-cta image-baker-batch-action",
+			});
+			button.onclick = (): void => void this.convertSelected(batch.group);
 		}
 
 		const list = container.createEl("ul", { cls: "image-baker-list" });
-		for (const item of items) {
+		for (const item of this.items) {
 			const entry = list.createEl("li", { cls: "image-baker-item" });
+			const checkbox = entry.createEl("input", {
+				cls: "image-baker-item-check",
+				type: "checkbox",
+			});
+			checkbox.checked = this.selected.has(item.start);
+			checkbox.onclick = (event): void => {
+				event.stopPropagation();
+				this.toggleSelection(item.start);
+			};
 			entry.createEl("span", {
 				text: item.label,
 				cls: "image-baker-item-label",
@@ -128,6 +169,64 @@ export class ImageListView extends ItemView {
 			};
 			entry.onclick = (): void => void this.revealImage(file, item.start);
 		}
+	}
+
+	private toggleSelection(key: number): void {
+		if (this.selected.has(key)) {
+			this.selected.delete(key);
+		} else {
+			this.selected.add(key);
+		}
+		this.renderList();
+	}
+
+	private selectGroup(group: "file" | "embedded"): void {
+		this.selected.clear();
+		for (const item of this.items) {
+			if ((item.kind === "embedded") === (group === "embedded")) {
+				this.selected.add(item.start);
+			}
+		}
+		this.renderList();
+	}
+
+	private selectedItems(): ImageListItem[] {
+		return this.items.filter((item) => this.selected.has(item.start));
+	}
+
+	/** Batch button label/target, only when the selection is one type. */
+	private batchAction(): { label: string; group: "file" | "embedded" } | null {
+		const chosen = this.selectedItems();
+		if (chosen.length === 0) {
+			return null;
+		}
+		if (chosen.every((item) => item.kind === "embedded")) {
+			return { label: `Extract ${chosen.length}`, group: "embedded" };
+		}
+		if (chosen.every((item) => item.kind !== "embedded")) {
+			return { label: `Bake ${chosen.length}`, group: "file" };
+		}
+		return null;
+	}
+
+	private async convertSelected(group: "file" | "embedded"): Promise<void> {
+		const file = this.currentFile;
+		if (!file) {
+			return;
+		}
+		const links = this.selectedItems().map((item) => item.link);
+		if (group === "embedded") {
+			await this.plugin.runExtract(
+				file,
+				links.filter((link): link is EmbeddedImage => link.kind === "embedded"),
+			);
+		} else {
+			await this.plugin.runEmbed(
+				file,
+				links.filter((link): link is ImageFileLink => link.kind !== "embedded"),
+			);
+		}
+		await this.refresh();
 	}
 
 	private async convertItem(file: TFile, item: ImageListItem): Promise<void> {

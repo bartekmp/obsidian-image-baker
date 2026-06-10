@@ -64,6 +64,25 @@
 	border-radius: var(--radius-s);
 }
 
+.image-baker-toolbar {
+	display: flex;
+	gap: var(--size-4-1);
+	padding: var(--size-4-1) 0;
+	flex-wrap: wrap;
+}
+
+.image-baker-toolbar button {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+	height: auto;
+	line-height: 1.8;
+}
+
+.image-baker-item-check {
+	flex-shrink: 0;
+	margin: 0;
+}
+
 .image-baker-item-action {
 	flex-shrink: 0;
 	font-size: var(--font-ui-smaller);

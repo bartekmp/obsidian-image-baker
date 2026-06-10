@@ -35,7 +35,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   menu and "selected image" commands apply to it directly.
 - File explorer context menu: embed an image into every note that links it, trashing the
   source only when nothing references it anymore.
-- Bake/Extract buttons on each entry of the image list sidebar.
+- Bake/Extract buttons on each entry of the image list sidebar, plus multi-select with
+  "Select files"/"Select baked" shortcuts and a batch convert button for same-type selections.
+- Right-clicking a baked image shows extract/copy/reset-size actions (replacing Obsidian's
+  non-extensible widget menu); the file-explorer entry sits with the action group instead of
+  after "Delete".
 - Extraction restores images to the folder they were embedded from (recorded in the embed),
   falling back to the attachment folder when it no longer exists.
 - Image list sidebar view (ribbon button and command) showing every image of the active note;

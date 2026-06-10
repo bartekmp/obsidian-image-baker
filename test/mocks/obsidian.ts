@@ -44,15 +44,18 @@ export interface RegisteredCommand {
 export class FakeElement {
 	text: string;
 	cls: string;
+	type: string;
+	checked = false;
 	children: FakeElement[] = [];
 	onclick: ((event: unknown) => unknown) | null = null;
 
 	constructor(
 		public tag: string,
-		options?: { text?: string; cls?: string },
+		options?: { text?: string; cls?: string; type?: string },
 	) {
 		this.text = options?.text ?? "";
 		this.cls = options?.cls ?? "";
+		this.type = options?.type ?? "";
 	}
 
 	empty(): void {
@@ -63,7 +66,10 @@ export class FakeElement {
 		this.text = text;
 	}
 
-	createEl(tag: string, options?: { text?: string; cls?: string }): FakeElement {
+	createEl(
+		tag: string,
+		options?: { text?: string; cls?: string; type?: string },
+	): FakeElement {
 		const child = new FakeElement(tag, options);
 		this.children.push(child);
 		return child;

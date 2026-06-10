@@ -45,7 +45,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
   `base64 · 142 KB` pill; click it to expand, move the cursor away to fold it again.
 - **Image list sidebar** — a right-sidebar view (ribbon button 🖼 or a command) lists every image
   of the active note with a file/baked badge and a one-click *Bake*/*Extract* button per image;
-  clicking an entry jumps the editor to that image.
+  clicking an entry jumps the editor to that image. Checkboxes (plus *Select files* / *Select
+  baked* shortcuts) allow batch conversion of any same-type selection in one click.
 - **Context menus everywhere** — right-click a rendered image in Live Preview or reading view,
   an image link in source mode, or an image file in the file explorer (*Embed image into notes
   that use it* — converts every note that links it, then trashes the file once nothing
