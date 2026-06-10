@@ -462,24 +462,63 @@ describe("ImageBakerPlugin", () => {
 		expect(editor.replaced).toHaveLength(0);
 	});
 
-	it("offers embedding from the file explorer menu for images only", () => {
+	it("offers matching file explorer menu entries for images and notes", () => {
 		const handler = app.workspaceHandlers.get("file-menu") as (
 			...args: unknown[]
 		) => void;
 		const image = app.vault.addBinary("photo.png", bytes);
 		const note = app.vault.addNote("One.md", "![[photo.png]]");
+		const pdf = app.vault.addBinary("doc.pdf", bytes);
 
 		const imageMenu = new MockMenu();
 		handler(imageMenu, image);
 		const noteMenu = new MockMenu();
 		handler(noteMenu, note);
+		const pdfMenu = new MockMenu();
+		handler(pdfMenu, pdf);
 
 		expect(imageMenu.items.map((item) => item.title)).toEqual([
 			"Embed image into notes that use it",
 		]);
 		// Grouped with the copy/open actions, not after "Delete".
 		expect(imageMenu.items[0]?.section).toBe("action");
-		expect(noteMenu.items).toHaveLength(0);
+		expect(noteMenu.items.map((item) => item.title)).toEqual([
+			"Embed images in this note",
+			"Extract images in this note",
+		]);
+		expect(pdfMenu.items).toHaveLength(0);
+	});
+
+	it("embeds a note's images from its file explorer menu", async () => {
+		const handler = app.workspaceHandlers.get("file-menu") as (
+			...args: unknown[]
+		) => void;
+		app.vault.addBinary("photo.png", bytes);
+		const note = app.vault.addNote("One.md", "![[photo.png]]");
+
+		const menu = new MockMenu();
+		handler(menu, note);
+		menu.items[0]?.clickHandler?.();
+		await flushPromises();
+
+		expect(app.vault.contents.get("One.md")).toContain("data:image/png;base64,");
+	});
+
+	it("extracts a note's images from its file explorer menu", async () => {
+		const handler = app.workspaceHandlers.get("file-menu") as (
+			...args: unknown[]
+		) => void;
+		const note = app.vault.addNote(
+			"One.md",
+			`![photo.png](data:image/png;base64,${base64})`,
+		);
+
+		const menu = new MockMenu();
+		handler(menu, note);
+		menu.items[1]?.clickHandler?.();
+		await flushPromises();
+
+		expect(app.vault.contents.get("One.md")).toBe("![[photo.png]]");
 	});
 
 	it("embeds a file into its notes from the file explorer menu", async () => {

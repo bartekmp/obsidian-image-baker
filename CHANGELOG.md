@@ -34,7 +34,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Right-clicking a rendered image in Live Preview selects its markdown, making the context
   menu and "selected image" commands apply to it directly.
 - File explorer context menu: embed an image into every note that links it, trashing the
-  source only when nothing references it anymore.
+  source only when nothing references it anymore; notes offer embed/extract of all their
+  images without opening them.
 - Bake/Extract buttons on each entry of the image list sidebar, plus multi-select with
   "Select files"/"Select baked" shortcuts and a batch convert button for same-type selections.
 - Right-clicking a baked image shows extract/copy/reset-size actions (replacing Obsidian's

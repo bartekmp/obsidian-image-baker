@@ -169,13 +169,31 @@ export default class ImageBakerPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
-				if (file instanceof TFile && isImagePath(file.path)) {
+				if (!(file instanceof TFile)) {
+					return;
+				}
+				if (isImagePath(file.path)) {
 					menu.addItem((item) =>
 						item
 							.setSection("action")
 							.setTitle("Embed image into notes that use it")
 							.setIcon("image-plus")
 							.onClick(() => void this.embedFileEverywhere(file)),
+					);
+				} else if (file.extension === "md") {
+					menu.addItem((item) =>
+						item
+							.setSection("action")
+							.setTitle("Embed images in this note")
+							.setIcon("image-plus")
+							.onClick(() => void this.runEmbed(file)),
+					);
+					menu.addItem((item) =>
+						item
+							.setSection("action")
+							.setTitle("Extract images in this note")
+							.setIcon("image-down")
+							.onClick(() => void this.runExtract(file)),
 					);
 				}
 			}),

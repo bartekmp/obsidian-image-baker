@@ -50,7 +50,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
 - **Context menus everywhere** — right-click a rendered image in Live Preview or reading view,
   an image link in source mode, or an image file in the file explorer (*Embed image into notes
   that use it* — converts every note that links it, then trashes the file once nothing
-  references it). On baked images the menu offers *Extract image to file*, *Copy image*, and
+  references it). Notes get *Embed images in this note* / *Extract images in this note* in the
+  file explorer too. On baked images the menu offers *Extract image to file*, *Copy image*, and
   *Reset size*.
 - **Click-to-select** — clicking or right-clicking a rendered image selects its markdown, so the
   *Embed/Extract/Copy selected image* commands and menu actions apply to it directly.
