@@ -1,8 +1,7 @@
-<p align="center">
+<div align="center">
   <img src="assets/obsidian-image-baker.png" alt="Image Baker — a bread loaf shaped like the Obsidian gem" width="200">
-</p>
-
-# Image Baker
+  <h1>Obsidian Image Baker</h1>
+</div>
 
 [![CI](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml/badge.svg)](https://github.com/bartekmp/obsidian-image-baker/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/github/manifest-json/v/bartekmp/obsidian-image-baker?label=version&color=blueviolet)](https://github.com/bartekmp/obsidian-image-baker/releases)
@@ -132,6 +131,10 @@ npm run build    # production build → main.js
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the branch, commit, and
 release conventions.
+
+## LLM policy
+
+The TypeScript source code in this repository is mainly generated with the LLM assistance.
 
 ## License
 

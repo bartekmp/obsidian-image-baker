@@ -1,9 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
-const targetVersion = process.env.npm_package_version;
+const targetVersion = process.argv[2] ?? process.env.npm_package_version;
 if (!targetVersion) {
-	throw new Error("npm_package_version is not set; run this through `npm version`.");
+	throw new Error(
+		"No version given; pass it as an argument or run this through `npm version`.",
+	);
 }
 
 // Sync the npm package version into the Obsidian manifest.
