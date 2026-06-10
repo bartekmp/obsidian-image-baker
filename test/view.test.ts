@@ -22,12 +22,14 @@ describe("listNoteImages", () => {
 			`![just a caption](data:image/jpeg;base64,${base64})`,
 		].join("\n");
 
-		expect(listNoteImages(content)).toEqual([
-			{ label: "named.png", kind: "embedded", start: 0 },
-			{ label: "wiki.png", kind: "wiki", start: expect.any(Number) },
-			{ label: "pics/markdown.png", kind: "markdown", start: expect.any(Number) },
-			{ label: "Embedded image (image/jpeg)", kind: "embedded", start: expect.any(Number) },
+		const items = listNoteImages(content);
+		expect(items.map(({ label, kind }) => ({ label, kind }))).toEqual([
+			{ label: "named.png", kind: "embedded" },
+			{ label: "wiki.png", kind: "wiki" },
+			{ label: "pics/markdown.png", kind: "markdown" },
+			{ label: "Embedded image (image/jpeg)", kind: "embedded" },
 		]);
+		expect(items.every((item) => item.link.kind === item.kind)).toBe(true);
 	});
 
 	it("returns an empty list for notes without images", () => {
@@ -121,6 +123,47 @@ describe("ImageListView", () => {
 		await flushPromises();
 
 		expect(renderedTexts("li")).toHaveLength(1);
+	});
+
+	it("renders a convert button per item", async () => {
+		app.activeFile = app.vault.addNote(
+			"Trip.md",
+			`![[photo.png]] and ![pic.png](data:image/png;base64,${base64})`,
+		);
+		await view.onOpen();
+
+		expect(renderedTexts("button")).toEqual(["Bake", "Extract"]);
+	});
+
+	it("bakes a file image from its button without navigating", async () => {
+		app.vault.addBinary("photo.png", sampleBytes(8));
+		app.activeFile = app.vault.addNote("Trip.md", "![[photo.png]]");
+		await view.onOpen();
+
+		contentOf(view)
+			.findAll("button")[0]
+			?.onclick?.({ stopPropagation: () => undefined });
+		await flushPromises();
+
+		expect(app.vault.contents.get("Trip.md")).toContain("data:image/png;base64,");
+		expect(app.centerLeaf.openedFiles).toHaveLength(0);
+		expect(renderedTexts("button")).toEqual(["Extract"]);
+	});
+
+	it("extracts a baked image from its button", async () => {
+		app.activeFile = app.vault.addNote(
+			"Trip.md",
+			`![photo.png](data:image/png;base64,${base64})`,
+		);
+		await view.onOpen();
+
+		contentOf(view)
+			.findAll("button")[0]
+			?.onclick?.({ stopPropagation: () => undefined });
+		await flushPromises();
+
+		expect(app.vault.contents.get("Trip.md")).toBe("![[photo.png]]");
+		expect(renderedTexts("button")).toEqual(["Bake"]);
 	});
 
 	it("renders once when refreshes overlap", async () => {

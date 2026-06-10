@@ -564,7 +564,7 @@ export default class ImageBakerPlugin extends Plugin {
 		}
 	}
 
-	private async runEmbed(
+	async runEmbed(
 		file: TFile,
 		links?: ImageFileLink | ImageFileLink[],
 	): Promise<void> {
@@ -582,7 +582,7 @@ export default class ImageBakerPlugin extends Plugin {
 		}
 	}
 
-	private async runExtract(
+	async runExtract(
 		file: TFile,
 		links?: EmbeddedImage | EmbeddedImage[],
 	): Promise<void> {

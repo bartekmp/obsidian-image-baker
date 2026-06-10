@@ -1,6 +1,10 @@
 import { ItemView, type MarkdownView, type TFile, type WorkspaceLeaf } from "obsidian";
 import { imagePathFromAlt } from "./lib/filename";
-import { findEmbeddedImages, findImageFileLinks } from "./lib/markdown";
+import {
+	findEmbeddedImages,
+	findImageFileLinks,
+	type AnyImageLink,
+} from "./lib/markdown";
 import type ImageBakerPlugin from "./main";
 
 export const IMAGE_LIST_VIEW_TYPE = "image-baker-image-list";
@@ -10,6 +14,7 @@ export interface ImageListItem {
 	kind: "wiki" | "markdown" | "embedded";
 	/** Offset of the image link in the note content. */
 	start: number;
+	link: AnyImageLink;
 }
 
 /** Lists all images of a note in document order. */
@@ -19,11 +24,13 @@ export function listNoteImages(content: string): ImageListItem[] {
 			label: link.kind === "wiki" ? link.linkpath : link.target,
 			kind: link.kind,
 			start: link.start,
+			link,
 		})),
 		...findEmbeddedImages(content).map((image) => ({
 			label: imagePathFromAlt(image.alt) ?? `Embedded image (${image.mime})`,
 			kind: image.kind,
 			start: image.start,
+			link: image,
 		})),
 	];
 	return items.sort((a, b) => a.start - b.start);
@@ -111,8 +118,25 @@ export class ImageListView extends ItemView {
 				text: item.kind === "embedded" ? "baked" : "file",
 				cls: "image-baker-item-badge",
 			});
+			const action = entry.createEl("button", {
+				text: item.kind === "embedded" ? "Extract" : "Bake",
+				cls: "image-baker-item-action",
+			});
+			action.onclick = (event): void => {
+				event.stopPropagation();
+				void this.convertItem(file, item);
+			};
 			entry.onclick = (): void => void this.revealImage(file, item.start);
 		}
+	}
+
+	private async convertItem(file: TFile, item: ImageListItem): Promise<void> {
+		if (item.link.kind === "embedded") {
+			await this.plugin.runExtract(file, item.link);
+		} else {
+			await this.plugin.runEmbed(file, item.link);
+		}
+		await this.refresh();
 	}
 
 	private async revealImage(file: TFile, offset: number): Promise<void> {

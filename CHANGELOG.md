@@ -31,6 +31,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (non-PNG embeds are converted to PNG for the clipboard).
 - Editor context menu actions on image links and embeds, and an "Extract image to file"
   context menu on rendered images in reading view.
+- Right-clicking a rendered image in Live Preview selects its markdown, making the context
+  menu and "selected image" commands apply to it directly.
+- File explorer context menu: embed an image into every note that links it, trashing the
+  source only when nothing references it anymore.
+- Bake/Extract buttons on each entry of the image list sidebar.
+- Extraction restores images to the folder they were embedded from (recorded in the embed),
+  falling back to the attachment folder when it no longer exists.
 - Image list sidebar view (ribbon button and command) showing every image of the active note;
   clicking an entry jumps the editor to that image.
 - Optional trashing of source files after embedding, guarded against files that are still

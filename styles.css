@@ -63,3 +63,11 @@
 	padding: 0 var(--size-4-1);
 	border-radius: var(--radius-s);
 }
+
+.image-baker-item-action {
+	flex-shrink: 0;
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+	height: auto;
+	line-height: 1.6;
+}

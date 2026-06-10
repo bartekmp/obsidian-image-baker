@@ -31,7 +31,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
 
 ### Getting images out
 
-- **Extract** any embed back into a vault file — original name and sizing restored, name
+- **Extract** any embed back into a vault file — original name, sizing, *and folder* restored
+  (the embed records where the file came from; the attachment folder is only a fallback), name
   collisions resolved automatically, identical duplicate embeds extracted to a single file.
 - **Copy to clipboard** — copy a baked image's pixels back out (converted to PNG, the only
   image format clipboards accept) for use in any other app, without touching the note.
@@ -43,15 +44,20 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
 - **Collapsed embed data** — in the editor, the long Base64 text is folded behind a small
   `base64 · 142 KB` pill; click it to expand, move the cursor away to fold it again.
 - **Image list sidebar** — a right-sidebar view (ribbon button 🖼 or a command) lists every image
-  of the active note with a file/baked badge; clicking an entry jumps the editor to that image.
-- **Context menus** — right-click an image link or embed in the editor (or a rendered baked image
-  in reading view) to convert just that one.
+  of the active note with a file/baked badge and a one-click *Bake*/*Extract* button per image;
+  clicking an entry jumps the editor to that image.
+- **Context menus everywhere** — right-click a rendered image in Live Preview or reading view,
+  an image link in source mode, or an image file in the file explorer (*Embed image into notes
+  that use it* — converts every note that links it, then trashes the file once nothing
+  references it).
+- **Click-to-select** — clicking or right-clicking a rendered image selects its markdown, so the
+  *Embed/Extract/Copy selected image* commands and menu actions apply to it directly.
 
 ### Commands
 
 - *Embed all images in the current note* / *Extract all embedded images to files*
-- *Embed image under cursor* / *Extract image under cursor* / *Copy image under cursor to
-  clipboard*
+- *Embed selected image* / *Extract selected image* / *Copy selected image to clipboard* —
+  apply to the image under the cursor or the one selected by clicking it
 - *Embed images in selection* / *Extract images in selection* — convert exactly the images
   inside the current text selection, even when the same link appears elsewhere in the note.
 - *Embed images across vault or folder* / *Extract embedded images across vault or folder* —
