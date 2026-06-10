@@ -33,6 +33,8 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
 
 - **Extract** any embed back into a vault file — original name and sizing restored, name
   collisions resolved automatically, identical duplicate embeds extracted to a single file.
+- **Copy to clipboard** — copy a baked image's pixels back out (converted to PNG, the only
+  image format clipboards accept) for use in any other app, without touching the note.
 - Works from the command palette, the editor context menu, the reading-view context menu, or in
   bulk across the vault.
 
@@ -48,7 +50,10 @@ recoverable name inherit the parent note's name (`My note image 1.png`).
 ### Commands
 
 - *Embed all images in the current note* / *Extract all embedded images to files*
-- *Embed image under cursor* / *Extract image under cursor*
+- *Embed image under cursor* / *Extract image under cursor* / *Copy image under cursor to
+  clipboard*
+- *Embed images in selection* / *Extract images in selection* — convert exactly the images
+  inside the current text selection, even when the same link appears elsewhere in the note.
 - *Embed images across vault or folder* / *Extract embedded images across vault or folder* —
   batch dialogs show a dry-run summary first ("Found 214 embeddable images (~38 MB) in 96
   notes."), report progress note by note, and can be aborted mid-run.
@@ -86,6 +91,9 @@ level. The plugin works on desktop and mobile and can be toggled at any time und
 - **Bases / card views don't render baked images.** Obsidian's database-style views ignore
   data-URI images. This is inherent to inlining and applies to every plugin using this approach;
   extract the image back to a file if you need it there.
+- **Publishing baked notes depends on the renderer.** Obsidian renders data-URI images
+  everywhere, but some external markdown renderers strip them — GitHub notably does. If a note
+  is headed for such a platform, run *Extract all embedded images to files* on a copy first.
 - **Excalidraw and Canvas are out of scope.** Both store image references in JSON, not markdown.
 - **Mobile paste is untested.** The paste/drop handling uses only cross-platform editor events,
   but has not yet been verified on a phone or tablet.

@@ -15,10 +15,17 @@ import {
 	formatEmbedReport,
 	formatExtractReport,
 } from "./core/converter";
+import {
+	copyEmbeddedImage,
+	systemClipboardWriter,
+	type ClipboardImageWriter,
+} from "./core/clipboard";
 import { buildTransferEmbeds, shouldEmbedTransfer } from "./core/transfer";
 import { Logger } from "./lib/logger";
 import {
 	findEmbedBySrc,
+	findEmbeddedImages,
+	findImageFileLinks,
 	findLinkAtOffset,
 	type AnyImageLink,
 	type EmbeddedImage,
@@ -32,6 +39,8 @@ import { IMAGE_LIST_VIEW_TYPE, ImageListView } from "./view";
 export default class ImageBakerPlugin extends Plugin {
 	override settings: ImageBakerSettings = normalizeSettings(null);
 	readonly logger = new Logger("Image Baker");
+	/** Injection point for tests; the system clipboard otherwise. */
+	clipboardWriter: ClipboardImageWriter = systemClipboardWriter;
 	private readonly editorExtensions: Extension[] = [];
 
 	override async onload(): Promise<void> {
@@ -84,6 +93,45 @@ export default class ImageBakerPlugin extends Plugin {
 					info,
 					(link): link is EmbeddedImage => link.kind === "embedded",
 					(file, link) => this.runExtract(file, link),
+				),
+		});
+
+		this.addCommand({
+			id: "embed-images-in-selection",
+			name: "Embed images in selection",
+			editorCheckCallback: (checking, editor, info) =>
+				this.runOnSelection(
+					checking,
+					editor,
+					info,
+					(link): link is ImageFileLink => link.kind !== "embedded",
+					(file, links) => this.runEmbed(file, links),
+				),
+		});
+
+		this.addCommand({
+			id: "extract-images-in-selection",
+			name: "Extract images in selection",
+			editorCheckCallback: (checking, editor, info) =>
+				this.runOnSelection(
+					checking,
+					editor,
+					info,
+					(link): link is EmbeddedImage => link.kind === "embedded",
+					(file, links) => this.runExtract(file, links),
+				),
+		});
+
+		this.addCommand({
+			id: "copy-image-at-cursor",
+			name: "Copy image under cursor to clipboard",
+			editorCheckCallback: (checking, editor, info) =>
+				this.runOnLink(
+					checking,
+					editor,
+					info,
+					(link): link is EmbeddedImage => link.kind === "embedded",
+					(_file, link) => this.copyEmbed(link),
 				),
 		});
 
@@ -228,6 +276,41 @@ export default class ImageBakerPlugin extends Plugin {
 		return true;
 	}
 
+	/** Image links lying entirely within the current selection. */
+	private linksInSelection(editor: Editor): AnyImageLink[] {
+		const from = editor.posToOffset(editor.getCursor("from"));
+		const to = editor.posToOffset(editor.getCursor("to"));
+		if (from === to) {
+			return [];
+		}
+		const content = editor.getValue();
+		return [
+			...findImageFileLinks(content),
+			...findEmbeddedImages(content),
+		].filter((link) => link.start >= from && link.end <= to);
+	}
+
+	private runOnSelection<T extends AnyImageLink>(
+		checking: boolean,
+		editor: Editor,
+		info: MarkdownView | MarkdownFileInfo,
+		matches: (link: AnyImageLink) => link is T,
+		action: (file: TFile, links: T[]) => Promise<void>,
+	): boolean {
+		const file = info.file;
+		if (!file) {
+			return false;
+		}
+		const links = this.linksInSelection(editor).filter(matches);
+		if (links.length === 0) {
+			return false;
+		}
+		if (!checking) {
+			void action(file, links);
+		}
+		return true;
+	}
+
 	private populateEditorMenu(
 		menu: Menu,
 		editor: Editor,
@@ -247,6 +330,12 @@ export default class ImageBakerPlugin extends Plugin {
 					.setTitle("Extract image to file")
 					.setIcon("image-down")
 					.onClick(() => void this.runExtract(file, link)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Copy image to clipboard")
+					.setIcon("copy")
+					.onClick(() => void this.copyEmbed(link)),
 			);
 		} else {
 			menu.addItem((item) =>
@@ -318,15 +407,25 @@ export default class ImageBakerPlugin extends Plugin {
 		for (const img of Array.from(images)) {
 			img.addEventListener("contextmenu", (event) => {
 				event.preventDefault();
+				const src = img.getAttribute("src") ?? "";
 				const menu = new Menu();
 				menu.addItem((item) =>
 					item
 						.setTitle("Extract image to file")
 						.setIcon("image-down")
 						.onClick(() =>
-							void this.extractBySrc(
-								sourcePath,
-								img.getAttribute("src") ?? "",
+							void this.withEmbedBySrc(sourcePath, src, (file, embed) =>
+								this.runExtract(file, embed),
+							),
+						),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle("Copy image to clipboard")
+						.setIcon("copy")
+						.onClick(() =>
+							void this.withEmbedBySrc(sourcePath, src, (_file, embed) =>
+								this.copyEmbed(embed),
 							),
 						),
 				);
@@ -335,7 +434,12 @@ export default class ImageBakerPlugin extends Plugin {
 		}
 	}
 
-	private async extractBySrc(sourcePath: string, src: string): Promise<void> {
+	/** Resolves a rendered data-URI back to its embed, then acts on it. */
+	private async withEmbedBySrc(
+		sourcePath: string,
+		src: string,
+		action: (file: TFile, embed: EmbeddedImage) => Promise<void>,
+	): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(sourcePath);
 		if (!(file instanceof TFile)) {
 			this.logger.warn(`No note found at "${sourcePath}"`);
@@ -347,42 +451,51 @@ export default class ImageBakerPlugin extends Plugin {
 			new Notice("Could not locate this embedded image in the note.");
 			return;
 		}
-		await this.runExtract(file, embed);
+		await action(file, embed);
 	}
 
-	private async runEmbed(file: TFile, link?: ImageFileLink): Promise<void> {
+	private async copyEmbed(embed: EmbeddedImage): Promise<void> {
+		try {
+			await copyEmbeddedImage(embed, this.clipboardWriter);
+			new Notice("Image copied to clipboard.");
+		} catch (error) {
+			this.reportFailure("Failed to copy image", error);
+		}
+	}
+
+	private async runEmbed(
+		file: TFile,
+		links?: ImageFileLink | ImageFileLink[],
+	): Promise<void> {
 		try {
 			const report = await embedImages(
 				this.app,
 				file,
 				this.settings,
 				this.logger,
-				link,
+				links,
 			);
 			new Notice(formatEmbedReport(report));
 		} catch (error) {
-			this.reportFailure(
-				link ? "Failed to embed image" : "Failed to embed images",
-				error,
-			);
+			this.reportFailure("Failed to embed images", error);
 		}
 	}
 
-	private async runExtract(file: TFile, link?: EmbeddedImage): Promise<void> {
+	private async runExtract(
+		file: TFile,
+		links?: EmbeddedImage | EmbeddedImage[],
+	): Promise<void> {
 		try {
 			const report = await extractImages(
 				this.app,
 				file,
 				this.settings,
 				this.logger,
-				link,
+				links,
 			);
 			new Notice(formatExtractReport(report));
 		} catch (error) {
-			this.reportFailure(
-				link ? "Failed to extract image" : "Failed to extract images",
-				error,
-			);
+			this.reportFailure("Failed to extract images", error);
 		}
 	}
 

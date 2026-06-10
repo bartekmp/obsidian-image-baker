@@ -25,7 +25,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Extract inline Base64 images back into vault files, restoring the recorded file name or
   deriving one from the parent note.
 - Command palette commands: embed/extract all images in the current note, embed/extract the
-  image under the cursor.
+  image under the cursor, embed/extract only the images inside the current selection, and
+  copy the baked image under the cursor to the clipboard.
+- "Copy image to clipboard" on baked images in the editor and reading-view context menus
+  (non-PNG embeds are converted to PNG for the clipboard).
 - Editor context menu actions on image links and embeds, and an "Extract image to file"
   context menu on rendered images in reading view.
 - Image list sidebar view (ribbon button and command) showing every image of the active note;

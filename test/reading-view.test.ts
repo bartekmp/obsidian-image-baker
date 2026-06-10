@@ -52,6 +52,7 @@ describe("reading view context menu", () => {
 		const menu = MockMenu.instances[0];
 		expect(menu?.items.map((item) => item.title)).toEqual([
 			"Extract image to file",
+			"Copy image to clipboard",
 		]);
 
 		menu?.items[0]?.clickHandler?.();
@@ -59,6 +60,25 @@ describe("reading view context menu", () => {
 
 		expect(app.vault.contents.get("Trip.md")).toBe("![[photo.png]]");
 		expect(app.vault.binaries.get("photo.png")).toEqual(bytes);
+	});
+
+	it("copies a baked image from the reading view menu", async () => {
+		const src = `data:image/png;base64,${base64}`;
+		app.vault.addNote("Trip.md", `![photo.png](${src})`);
+		const written: string[] = [];
+		plugin.clipboardWriter = (mime): Promise<void> => {
+			written.push(mime);
+			return Promise.resolve();
+		};
+		const img = renderEmbeddedImage(src, "Trip.md");
+
+		img.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+		MockMenu.instances[0]?.items[1]?.clickHandler?.();
+		await flushPromises();
+
+		expect(written).toEqual(["image/png"]);
+		expect(MockNotice.messages).toEqual(["Image copied to clipboard."]);
+		expect(app.vault.contents.get("Trip.md")).toBe(`![photo.png](${src})`);
 	});
 
 	it("ignores images that are not data URIs", () => {

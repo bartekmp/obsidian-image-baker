@@ -206,6 +206,7 @@ export class FakeEditor {
 	cursor: { line: number; ch: number } | null = null;
 	scrolledTo: unknown = null;
 	replaced: string[] = [];
+	selectionRange: { from: number; to: number } | null = null;
 
 	constructor(
 		public content: string,
@@ -216,7 +217,13 @@ export class FakeEditor {
 		return this.content;
 	}
 
-	getCursor(): { line: number; ch: number } {
+	getCursor(which?: string): { line: number; ch: number } {
+		if (this.selectionRange && which === "from") {
+			return { line: 0, ch: this.selectionRange.from };
+		}
+		if (this.selectionRange && which === "to") {
+			return { line: 0, ch: this.selectionRange.to };
+		}
 		return { line: 0, ch: this.cursorOffset };
 	}
 

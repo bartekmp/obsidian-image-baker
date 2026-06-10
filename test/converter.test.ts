@@ -160,6 +160,41 @@ describe("embedImages", () => {
 		expect(app.trashed).toEqual(["b.png"]);
 	});
 
+	it("embeds only the requested subset of links", async () => {
+		app.vault.addBinary("a.png", bytes);
+		app.vault.addBinary("b.png", bytes);
+		app.vault.addBinary("c.png", bytes);
+		const note = app.vault.addNote("Trip.md", "![[a.png]] ![[b.png]] ![[c.png]]");
+		const links = findImageFileLinks(await app.vault.read(note));
+
+		const report = await embedImages(
+			app.asApp(),
+			note,
+			makeSettings(),
+			logger,
+			[links[0]!, links[2]!],
+		);
+
+		expect(report.embedded).toBe(2);
+		const content = app.vault.contents.get("Trip.md") ?? "";
+		expect(content).toContain("![[b.png]]");
+		expect(content).not.toContain("![[a.png]]");
+		expect(content).not.toContain("![[c.png]]");
+	});
+
+	it("converts only the requested occurrence of a duplicated link", async () => {
+		app.vault.addBinary("a.png", bytes);
+		const note = app.vault.addNote("Trip.md", "![[a.png]] mid ![[a.png]]");
+		const second = findImageFileLinks(await app.vault.read(note))[1];
+
+		await embedImages(app.asApp(), note, makeSettings(), logger, [second!]);
+
+		const content = app.vault.contents.get("Trip.md") ?? "";
+		expect(content.startsWith("![[a.png]] mid ")).toBe(true);
+		expect(content).toContain("data:image/png;base64,");
+		expect(app.trashed).toEqual([]);
+	});
+
 	it("replaces duplicate links once each and counts the image once", async () => {
 		app.vault.addBinary("photo.png", bytes);
 		const note = app.vault.addNote("Trip.md", "![[photo.png]] ![[photo.png]]");
@@ -370,6 +405,28 @@ describe("extractImages", () => {
 		const content = app.vault.contents.get("Trip.md") ?? "";
 		expect(content).toContain("![a.png](data:image/png;base64,");
 		expect(content).toContain("![[b.png]]");
+	});
+
+	it("extracts only the requested subset of embeds", async () => {
+		const note = app.vault.addNote(
+			"Trip.md",
+			`![a.png](data:image/png;base64,${base64}) ![b.png](data:image/png;base64,${base64}) ![c.png](data:image/png;base64,${base64})`,
+		);
+		const images = findEmbeddedImages(await app.vault.read(note));
+
+		const report = await extractImages(
+			app.asApp(),
+			note,
+			makeSettings(),
+			logger,
+			[images[0]!, images[2]!],
+		);
+
+		expect(report.createdPaths).toEqual(["a.png", "c.png"]);
+		const content = app.vault.contents.get("Trip.md") ?? "";
+		expect(content).toContain("![[a.png]]");
+		expect(content).toContain("![b.png](data:image/png;base64,");
+		expect(content).toContain("![[c.png]]");
 	});
 
 	it("creates one file for identical duplicate embeds", async () => {

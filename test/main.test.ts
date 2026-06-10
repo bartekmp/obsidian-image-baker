@@ -47,6 +47,9 @@ describe("ImageBakerPlugin", () => {
 			"extract-all-images",
 			"embed-image-at-cursor",
 			"extract-image-at-cursor",
+			"embed-images-in-selection",
+			"extract-images-in-selection",
+			"copy-image-at-cursor",
 			"batch-embed-images",
 			"batch-extract-images",
 			"show-image-list",
@@ -198,6 +201,101 @@ describe("ImageBakerPlugin", () => {
 		expect(content).toContain(`![b.png](data:image/png;base64,${base64})`);
 	});
 
+	it("embeds only the images inside the selection", async () => {
+		app.vault.addBinary("a.png", bytes);
+		app.vault.addBinary("b.png", bytes);
+		const content = "![[a.png]] ![[b.png]]";
+		const note = app.vault.addNote("Trip.md", content);
+		const editor = new FakeEditor(content);
+		editor.selectionRange = { from: 0, to: 10 };
+
+		const applicable = command("embed-images-in-selection").editorCheckCallback?.(
+			false,
+			editor.asEditor(),
+			asInfo(note),
+		);
+		await flushPromises();
+
+		expect(applicable).toBe(true);
+		const updated = app.vault.contents.get("Trip.md") ?? "";
+		expect(updated).toContain("![[b.png]]");
+		expect(updated).toContain(`![a.png](data:image/png;base64,${base64})`);
+	});
+
+	it("extracts only the embeds inside the selection", async () => {
+		const embed = `![a.png](data:image/png;base64,${base64})`;
+		const content = `${embed} and ${embed}`;
+		const note = app.vault.addNote("Trip.md", content);
+		const editor = new FakeEditor(content);
+		editor.selectionRange = { from: 0, to: embed.length };
+
+		command("extract-images-in-selection").editorCheckCallback?.(
+			false,
+			editor.asEditor(),
+			asInfo(note),
+		);
+		await flushPromises();
+
+		const updated = app.vault.contents.get("Trip.md") ?? "";
+		expect(updated.startsWith("![[a.png]] and ")).toBe(true);
+		expect(updated).toContain("data:image/png;base64,");
+	});
+
+	it("disables the selection commands without a matching selection", () => {
+		const content = "![[a.png]] text";
+		const note = app.vault.addNote("Trip.md", content);
+		const collapsed = new FakeEditor(content, 3);
+		const overText = new FakeEditor(content);
+		overText.selectionRange = { from: 11, to: 15 };
+
+		const embedCommand = command("embed-images-in-selection").editorCheckCallback;
+		expect(embedCommand?.(true, collapsed.asEditor(), asInfo(note))).toBe(false);
+		expect(embedCommand?.(true, overText.asEditor(), asInfo(note))).toBe(false);
+	});
+
+	it("copies the embed under the cursor to the clipboard", async () => {
+		const content = `![photo.png](data:image/png;base64,${base64})`;
+		const note = app.vault.addNote("Trip.md", content);
+		const written: { mime: string; bytes: Uint8Array }[] = [];
+		plugin.clipboardWriter = (mime, payload): Promise<void> => {
+			written.push({ mime, bytes: payload });
+			return Promise.resolve();
+		};
+		const editor = new FakeEditor(content, content.indexOf("base64,"));
+
+		const applicable = command("copy-image-at-cursor").editorCheckCallback?.(
+			false,
+			editor.asEditor(),
+			asInfo(note),
+		);
+		await flushPromises();
+
+		expect(applicable).toBe(true);
+		expect(written).toEqual([{ mime: "image/png", bytes }]);
+		expect(MockNotice.messages).toEqual(["Image copied to clipboard."]);
+		expect(app.vault.contents.get("Trip.md")).toBe(content);
+	});
+
+	it("offers extract and copy in the editor context menu on an embed", () => {
+		const content = `![photo.png](data:image/png;base64,${base64})`;
+		const note = app.vault.addNote("Trip.md", content);
+		const handler = app.workspaceHandlers.get("editor-menu") as (
+			...args: unknown[]
+		) => void;
+		const menu = new MockMenu();
+
+		handler(
+			menu,
+			new FakeEditor(content, content.indexOf("base64,")).asEditor(),
+			asInfo(note),
+		);
+
+		expect(menu.items.map((item) => item.title)).toEqual([
+			"Extract image to file",
+			"Copy image to clipboard",
+		]);
+	});
+
 	it("offers an embed action in the editor context menu on a file link", async () => {
 		app.vault.addBinary("photo.png", bytes);
 		const note = app.vault.addNote("Trip.md", "![[photo.png]]");
@@ -230,9 +328,7 @@ describe("ImageBakerPlugin", () => {
 			asInfo(note),
 		);
 
-		expect(menu.items.map((item) => item.title)).toEqual([
-			"Extract image to file",
-		]);
+		expect(menu.items[0]?.title).toBe("Extract image to file");
 		menu.items[0]?.clickHandler?.();
 		await flushPromises();
 		expect(app.vault.contents.get("Trip.md")).toBe("![[photo.png]]");

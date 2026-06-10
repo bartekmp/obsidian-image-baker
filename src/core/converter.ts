@@ -35,20 +35,34 @@ export interface ExtractReport {
 }
 
 /**
- * Picks the occurrence closest to where the requested link was originally
- * found, in case the note contains the same link text more than once.
+ * Maps each requested link to its closest occurrence in the current
+ * content, so a duplicated link text converts exactly the requested
+ * occurrences and not its twins elsewhere in the note.
  */
-function closestByRaw<T extends { raw: string; start: number }>(
-	links: T[],
-	only: T,
+function pickOccurrences<T extends { raw: string; start: number }>(
+	candidates: T[],
+	wanted: readonly T[],
 ): T[] {
-	return links
-		.filter((link) => link.raw === only.raw)
-		.sort(
-			(a, b) =>
-				Math.abs(a.start - only.start) - Math.abs(b.start - only.start),
-		)
-		.slice(0, 1);
+	const chosen = new Set<T>();
+	for (const want of wanted) {
+		const match = candidates
+			.filter((candidate) => candidate.raw === want.raw && !chosen.has(candidate))
+			.sort(
+				(a, b) =>
+					Math.abs(a.start - want.start) - Math.abs(b.start - want.start),
+			)[0];
+		if (match) {
+			chosen.add(match);
+		}
+	}
+	return [...chosen].sort((a, b) => a.start - b.start);
+}
+
+function asArray<T>(value: T | readonly T[] | undefined): T[] | null {
+	if (value === undefined) {
+		return null;
+	}
+	return Array.isArray(value) ? ([...value] as T[]) : [value as T];
 }
 
 function externalReferenceCount(
@@ -116,14 +130,14 @@ async function availableAttachmentPath(
 
 /**
  * Converts image file links in a note into inline Base64 embeds.
- * When `only` is given, just that link is converted.
+ * When `only` is given, just those links are converted.
  */
 export async function embedImages(
 	app: App,
 	note: TFile,
 	settings: ImageBakerSettings,
 	logger: Logger,
-	only?: ImageFileLink,
+	only?: ImageFileLink | readonly ImageFileLink[],
 	reencode: Reencoder = canvasReencode,
 ): Promise<EmbedReport> {
 	const report: EmbedReport = {
@@ -132,8 +146,9 @@ export async function embedImages(
 		deleted: 0,
 		failures: [],
 	};
+	const requested = asArray(only);
 	const content = await app.vault.read(note);
-	const links = only ? [only] : findImageFileLinks(content);
+	const links = requested ?? findImageFileLinks(content);
 	const replacementByRaw = new Map<string, string>();
 	const sources = new Map<string, TFile>();
 
@@ -199,11 +214,13 @@ export async function embedImages(
 
 	if (replacementByRaw.size > 0) {
 		await app.vault.process(note, (data) => {
-			const found = only
-				? closestByRaw(findImageFileLinks(data), only)
-				: findImageFileLinks(data).filter((link) =>
-						replacementByRaw.has(link.raw),
-					);
+			const candidates = findImageFileLinks(data);
+			const found = requested
+				? pickOccurrences(
+						candidates,
+						requested.filter((link) => replacementByRaw.has(link.raw)),
+					)
+				: candidates.filter((link) => replacementByRaw.has(link.raw));
 			return applyReplacements(
 				data,
 				found.map((link) => ({
@@ -243,22 +260,23 @@ export async function embedImages(
  * Converts inline Base64 embeds in a note back into vault files, restoring
  * the original file name when it is recoverable from the alt text, or
  * deriving one from the note's name otherwise.
- * When `only` is given, just that embed is converted.
+ * When `only` is given, just those embeds are converted.
  */
 export async function extractImages(
 	app: App,
 	note: TFile,
 	settings: ImageBakerSettings,
 	logger: Logger,
-	only?: EmbeddedImage,
+	only?: EmbeddedImage | readonly EmbeddedImage[],
 ): Promise<ExtractReport> {
 	const report: ExtractReport = {
 		extracted: 0,
 		createdPaths: [],
 		failures: [],
 	};
+	const requested = asArray(only);
 	const content = await app.vault.read(note);
-	const images = only ? [only] : findEmbeddedImages(content);
+	const images = requested ?? findEmbeddedImages(content);
 	const replacementByRaw = new Map<string, string>();
 	let index = 1;
 
@@ -299,11 +317,13 @@ export async function extractImages(
 
 	if (replacementByRaw.size > 0) {
 		await app.vault.process(note, (data) => {
-			const found = only
-				? closestByRaw(findEmbeddedImages(data), only)
-				: findEmbeddedImages(data).filter((image) =>
-						replacementByRaw.has(image.raw),
-					);
+			const candidates = findEmbeddedImages(data);
+			const found = requested
+				? pickOccurrences(
+						candidates,
+						requested.filter((image) => replacementByRaw.has(image.raw)),
+					)
+				: candidates.filter((image) => replacementByRaw.has(image.raw));
 			return applyReplacements(
 				data,
 				found.map((image) => ({
