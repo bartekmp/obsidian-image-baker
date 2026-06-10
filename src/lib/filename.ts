@@ -18,15 +18,17 @@ export function sanitizeFilename(name: string): string {
 }
 
 /**
- * Recovers an image file name from the alt text of an embedded image.
- * Returns null when the alt text does not look like an image file name.
+ * Recovers an image path (optionally including folders) from the alt text
+ * of an embedded image. Returns null when the alt text does not look like
+ * an image path.
  */
-export function filenameFromAlt(alt: string): string | null {
-	const sanitized = sanitizeFilename(alt);
-	if (sanitized === "" || !isImagePath(sanitized)) {
+export function imagePathFromAlt(alt: string): string | null {
+	const segments = alt.split("/").map((segment) => sanitizeFilename(segment));
+	if (segments.some((segment) => segment === "")) {
 		return null;
 	}
-	return sanitized;
+	const path = segments.join("/");
+	return isImagePath(path) ? path : null;
 }
 
 /**

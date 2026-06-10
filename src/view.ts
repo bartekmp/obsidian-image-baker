@@ -1,5 +1,5 @@
 import { ItemView, type MarkdownView, type TFile, type WorkspaceLeaf } from "obsidian";
-import { filenameFromAlt } from "./lib/filename";
+import { imagePathFromAlt } from "./lib/filename";
 import { findEmbeddedImages, findImageFileLinks } from "./lib/markdown";
 import type ImageBakerPlugin from "./main";
 
@@ -21,7 +21,7 @@ export function listNoteImages(content: string): ImageListItem[] {
 			start: link.start,
 		})),
 		...findEmbeddedImages(content).map((image) => ({
-			label: filenameFromAlt(image.alt) ?? `Embedded image (${image.mime})`,
+			label: imagePathFromAlt(image.alt) ?? `Embedded image (${image.mime})`,
 			kind: image.kind,
 			start: image.start,
 		})),

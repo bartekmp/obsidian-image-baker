@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-	filenameFromAlt,
 	generateImageFilename,
+	imagePathFromAlt,
 	matchExtensionToMime,
 	sanitizeFilename,
 } from "../src/lib/filename";
@@ -24,15 +24,26 @@ describe("sanitizeFilename", () => {
 	});
 });
 
-describe("filenameFromAlt", () => {
+describe("imagePathFromAlt", () => {
 	it("recovers an image file name", () => {
-		expect(filenameFromAlt("photo.png")).toBe("photo.png");
+		expect(imagePathFromAlt("photo.png")).toBe("photo.png");
 	});
 
-	it("rejects alt text that is not an image file name", () => {
-		expect(filenameFromAlt("just a caption")).toBeNull();
-		expect(filenameFromAlt("document.pdf")).toBeNull();
-		expect(filenameFromAlt("")).toBeNull();
+	it("recovers a path with folders", () => {
+		expect(imagePathFromAlt("pics/2026/my photo.png")).toBe(
+			"pics/2026/my photo.png",
+		);
+	});
+
+	it("rejects alt text that is not an image path", () => {
+		expect(imagePathFromAlt("just a caption")).toBeNull();
+		expect(imagePathFromAlt("document.pdf")).toBeNull();
+		expect(imagePathFromAlt("")).toBeNull();
+		expect(imagePathFromAlt("pics//photo.png")).toBeNull();
+	});
+
+	it("sanitizes hostile path segments", () => {
+		expect(imagePathFromAlt('pi<cs/pho|to".png')).toBe("pics/photo.png");
 	});
 });
 

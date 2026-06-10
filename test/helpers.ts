@@ -1,6 +1,18 @@
 import type { App, Editor, TFile } from "obsidian";
 import { TFile as MockTFile, TFolder } from "./mocks/obsidian";
 
+export function folderPathsOf(path: string): string[] {
+	const parts = path.split("/");
+	parts.pop();
+	const folders: string[] = [];
+	let current = "";
+	for (const part of parts) {
+		current = current ? `${current}/${part}` : part;
+		folders.push(current);
+	}
+	return folders;
+}
+
 function makeFile(path: string, size: number): TFile {
 	const file = new MockTFile();
 	file.path = path;
@@ -18,13 +30,25 @@ function makeFile(path: string, size: number): TFile {
 
 export class FakeVault {
 	files = new Map<string, TFile>();
+	folders = new Map<string, TFolder>();
 	contents = new Map<string, string>();
 	binaries = new Map<string, Uint8Array>();
+
+	private registerFolders(path: string): void {
+		for (const folder of folderPathsOf(path)) {
+			if (!this.folders.has(folder)) {
+				const instance = new TFolder();
+				instance.path = folder;
+				this.folders.set(folder, instance);
+			}
+		}
+	}
 
 	addNote(path: string, content: string): TFile {
 		const file = makeFile(path, content.length);
 		this.files.set(path, file);
 		this.contents.set(path, content);
+		this.registerFolders(path);
 		return file;
 	}
 
@@ -32,6 +56,7 @@ export class FakeVault {
 		const file = makeFile(path, bytes.length);
 		this.files.set(path, file);
 		this.binaries.set(path, bytes);
+		this.registerFolders(path);
 		return file;
 	}
 
@@ -70,8 +95,8 @@ export class FakeVault {
 		return Promise.resolve(file);
 	}
 
-	getAbstractFileByPath(path: string): TFile | null {
-		return this.files.get(path) ?? null;
+	getAbstractFileByPath(path: string): TFile | TFolder | null {
+		return this.files.get(path) ?? this.folders.get(path) ?? null;
 	}
 
 	cachedRead(file: TFile): Promise<string> {

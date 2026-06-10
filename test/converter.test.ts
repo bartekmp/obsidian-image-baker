@@ -36,7 +36,7 @@ describe("embedImages", () => {
 
 		expect(report).toMatchObject({ embedded: 1, skipped: 0, failures: [] });
 		expect(app.vault.contents.get("notes/Trip.md")).toBe(
-			`before ![photo.png](data:image/png;base64,${base64}) after`,
+			`before ![pics/photo.png](data:image/png;base64,${base64}) after`,
 		);
 	});
 
@@ -59,7 +59,7 @@ describe("embedImages", () => {
 
 		expect(report.embedded).toBe(1);
 		expect(app.vault.contents.get("Trip.md")).toContain(
-			`![my cat.jpg](data:image/jpeg;base64,${base64})`,
+			`![pics/my cat.jpg](data:image/jpeg;base64,${base64})`,
 		);
 	});
 
@@ -348,6 +348,43 @@ describe("extractImages", () => {
 		expect(app.vault.contents.get("my notes/Trip.md")).toBe(
 			"![300](my%20notes/photo.png)",
 		);
+	});
+
+	it("restores the file to its original folder when it still exists", async () => {
+		// The pics folder exists because another file lives in it.
+		app.vault.addBinary("pics/other.png", sampleBytes(3));
+		const note = app.vault.addNote(
+			"Trip.md",
+			`![pics/photo.png](data:image/png;base64,${base64})`,
+		);
+
+		const report = await extractImages(app.asApp(), note, makeSettings(), logger);
+
+		expect(report.createdPaths).toEqual(["pics/photo.png"]);
+		expect(app.vault.contents.get("Trip.md")).toBe("![[photo.png]]");
+	});
+
+	it("falls back to the attachment folder when the original folder is gone", async () => {
+		const note = app.vault.addNote(
+			"notes/Trip.md",
+			`![gone/photo.png](data:image/png;base64,${base64})`,
+		);
+
+		const report = await extractImages(app.asApp(), note, makeSettings(), logger);
+
+		expect(report.createdPaths).toEqual(["notes/photo.png"]);
+	});
+
+	it("deduplicates names within the restored folder", async () => {
+		app.vault.addBinary("pics/photo.png", sampleBytes(3));
+		const note = app.vault.addNote(
+			"Trip.md",
+			`![pics/photo.png](data:image/png;base64,${base64})`,
+		);
+
+		const report = await extractImages(app.asApp(), note, makeSettings(), logger);
+
+		expect(report.createdPaths).toEqual(["pics/photo 1.png"]);
 	});
 
 	it("falls back to the note's folder when the attachment API is missing", async () => {

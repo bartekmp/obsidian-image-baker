@@ -1,8 +1,14 @@
-import { normalizePath, type App, type FileManager, type TFile } from "obsidian";
+import {
+	TFolder,
+	normalizePath,
+	type App,
+	type FileManager,
+	type TFile,
+} from "obsidian";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
 import {
-	filenameFromAlt,
 	generateImageFilename,
+	imagePathFromAlt,
 	matchExtensionToMime,
 } from "../lib/filename";
 import type { Logger } from "../lib/logger";
@@ -102,6 +108,24 @@ type AttachmentPathResolver = FileManager & {
 	) => Promise<string>;
 };
 
+function availablePathInFolder(
+	app: App,
+	folder: string,
+	filename: string,
+): string {
+	const prefix = folder === "" || folder === "/" ? "" : `${folder}/`;
+	const dot = filename.lastIndexOf(".");
+	const base = filename.slice(0, dot);
+	const extension = filename.slice(dot + 1);
+	let candidate = normalizePath(`${prefix}${filename}`);
+	let counter = 1;
+	while (app.vault.getAbstractFileByPath(candidate)) {
+		candidate = normalizePath(`${prefix}${base} ${counter}.${extension}`);
+		counter++;
+	}
+	return candidate;
+}
+
 async function availableAttachmentPath(
 	app: App,
 	filename: string,
@@ -114,18 +138,26 @@ async function availableAttachmentPath(
 		);
 	}
 	// Fallback for older app versions: next to the note, deduplicated name.
-	const folder =
-		note.parent && note.parent.path !== "/" ? `${note.parent.path}/` : "";
-	const dot = filename.lastIndexOf(".");
-	const base = filename.slice(0, dot);
-	const extension = filename.slice(dot + 1);
-	let candidate = normalizePath(`${folder}${filename}`);
-	let counter = 1;
-	while (app.vault.getAbstractFileByPath(candidate)) {
-		candidate = normalizePath(`${folder}${base} ${counter}.${extension}`);
-		counter++;
+	return availablePathInFolder(app, note.parent?.path ?? "", filename);
+}
+
+/**
+ * Where an extracted image should be written: its original folder when the
+ * embed recorded one and it still exists, the attachment folder otherwise.
+ */
+async function extractionPath(
+	app: App,
+	storedPath: string | null,
+	filename: string,
+	note: TFile,
+): Promise<string> {
+	if (storedPath?.includes("/")) {
+		const folder = storedPath.slice(0, storedPath.lastIndexOf("/"));
+		if (app.vault.getAbstractFileByPath(folder) instanceof TFolder) {
+			return availablePathInFolder(app, folder, filename);
+		}
 	}
-	return candidate;
+	return availableAttachmentPath(app, filename, note);
 }
 
 /**
@@ -183,7 +215,9 @@ export async function embedImages(
 			const data = await app.vault.readBinary(file);
 			let payload = new Uint8Array(data);
 			let payloadMime = mime;
-			let filename = file.name;
+			// The full path is recorded so extraction can restore the file
+			// to the folder it came from.
+			let filename = file.path;
 			const optimized = await optimizeImage(
 				payload,
 				payloadMime,
@@ -290,12 +324,13 @@ export async function extractImages(
 			logger.warn(`Unsupported embedded image type "${image.mime}"`);
 			continue;
 		}
+		const storedPath = imagePathFromAlt(image.alt);
 		const filename =
-			filenameFromAlt(image.alt) ??
+			storedPath?.split("/").pop() ??
 			generateImageFilename(note.basename, index, extension);
 		try {
 			const bytes = base64ToBytes(image.base64);
-			const path = await availableAttachmentPath(app, filename, note);
+			const path = await extractionPath(app, storedPath, filename, note);
 			const created = await app.vault.createBinary(path, bytes.buffer);
 			const linkpath =
 				settings.linkStyle === "wiki"
