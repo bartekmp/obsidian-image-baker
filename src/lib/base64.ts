@@ -14,7 +14,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
  * Decodes a Base64 string into raw bytes. Whitespace is tolerated.
  * Throws on malformed input.
  */
-export function base64ToBytes(base64: string): Uint8Array<ArrayBuffer> {
+export function base64ToBytes(base64: string): Uint8Array {
 	const cleaned = base64.replace(/\s+/g, "");
 	if (cleaned.length % 4 !== 0 || !BASE64_PATTERN.test(cleaned)) {
 		throw new Error("Malformed Base64 payload");

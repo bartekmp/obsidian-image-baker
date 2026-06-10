@@ -204,7 +204,7 @@ export default class ImageBakerPlugin extends Plugin {
 		});
 
 		this.registerDomEvent(
-			document,
+			activeDocument,
 			"contextmenu",
 			(evt) => this.selectClickedImage(evt),
 			{ capture: true },
@@ -212,25 +212,37 @@ export default class ImageBakerPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on("editor-paste", (evt, editor, info) => {
-				this.handleTransfer(
-					evt,
+				if (evt.defaultPrevented) {
+					return;
+				}
+				const target = this.transferTarget(
 					evt.clipboardData,
-					editor,
 					info,
 					this.settings.embedOnPaste,
 				);
+				if (!target) {
+					return;
+				}
+				evt.preventDefault();
+				void this.embedTransferred(target.files, editor, target.note);
 			}),
 		);
 
 		this.registerEvent(
 			this.app.workspace.on("editor-drop", (evt, editor, info) => {
-				this.handleTransfer(
-					evt,
+				if (evt.defaultPrevented) {
+					return;
+				}
+				const target = this.transferTarget(
 					evt.dataTransfer,
-					editor,
 					info,
 					this.settings.embedOnDrop,
 				);
+				if (!target) {
+					return;
+				}
+				evt.preventDefault();
+				void this.embedTransferred(target.files, editor, target.note);
 			}),
 		);
 
@@ -458,19 +470,21 @@ export default class ImageBakerPlugin extends Plugin {
 		}
 	}
 
-	private handleTransfer(
-		evt: ClipboardEvent | DragEvent,
+	/**
+	 * The files a paste/drop event should bake and the note to bake them
+	 * into, or null when the event should stay with Obsidian's handling.
+	 */
+	private transferTarget(
 		data: DataTransfer | null,
-		editor: Editor,
 		info: MarkdownView | MarkdownFileInfo,
 		enabled: boolean,
-	): void {
-		if (!enabled || evt.defaultPrevented) {
-			return;
+	): { files: File[]; note: TFile } | null {
+		if (!enabled) {
+			return null;
 		}
 		const note = info.file;
 		if (!note) {
-			return;
+			return null;
 		}
 		const files = Array.from(data?.files ?? []);
 		if (!shouldEmbedTransfer(files, this.settings)) {
@@ -479,10 +493,9 @@ export default class ImageBakerPlugin extends Plugin {
 					"Leaving transferred files to Obsidian (unsupported type or above the size limit)",
 				);
 			}
-			return;
+			return null;
 		}
-		evt.preventDefault();
-		void this.embedTransferred(files, editor, note);
+		return { files, note };
 	}
 
 	private async embedTransferred(

@@ -101,7 +101,7 @@ export async function buildTransferEmbeds(
 	const prefix = noteFolder !== "" && noteFolder !== "/" ? `${noteFolder}/` : "";
 	const parts: string[] = [];
 	for (const [index, file] of files.entries()) {
-		let bytes = new Uint8Array(await file.arrayBuffer());
+		let bytes: Uint8Array = new Uint8Array(await file.arrayBuffer());
 		let mime = file.type.toLowerCase();
 		const optimized = await optimizeImage(bytes, mime, settings, reencode);
 		if (optimized.changed) {

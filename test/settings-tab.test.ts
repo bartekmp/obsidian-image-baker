@@ -35,7 +35,7 @@ describe("ImageBakerSettingTab", () => {
 			"Embed images on paste",
 			"Embed images on drop",
 			"Delete source files after embedding",
-			"Maximum file size to embed (KB)",
+			"Maximum file size to embed",
 			"Optimize images before embedding",
 			"Optimized format",
 			"Optimized quality",
@@ -86,7 +86,7 @@ describe("ImageBakerSettingTab", () => {
 	});
 
 	it("persists a valid size limit and floors it", async () => {
-		const text = findSetting("Maximum file size to embed (KB)").texts[0];
+		const text = findSetting("Maximum file size to embed").texts[0];
 
 		await text?.__change("256.7");
 
@@ -94,7 +94,7 @@ describe("ImageBakerSettingTab", () => {
 	});
 
 	it("ignores invalid size limits", async () => {
-		const text = findSetting("Maximum file size to embed (KB)").texts[0];
+		const text = findSetting("Maximum file size to embed").texts[0];
 
 		await text?.__change("-3");
 		await text?.__change("abc");

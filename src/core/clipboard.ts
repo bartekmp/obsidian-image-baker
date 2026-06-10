@@ -1,10 +1,11 @@
 import { base64ToBytes } from "../lib/base64";
+import { toArrayBuffer } from "../lib/bytes";
 import type { EmbeddedImage } from "../lib/markdown";
 import { canvasReencode, type Reencoder } from "./optimize";
 
 export type ClipboardImageWriter = (
 	mime: string,
-	bytes: Uint8Array<ArrayBuffer>,
+	bytes: Uint8Array,
 ) => Promise<void>;
 
 /* v8 ignore start -- requires the browser clipboard; exercised in Obsidian */
@@ -13,7 +14,7 @@ export const systemClipboardWriter: ClipboardImageWriter = async (
 	bytes,
 ) => {
 	const item = new ClipboardItem({
-		[mime]: new Blob([bytes], { type: mime }),
+		[mime]: new Blob([toArrayBuffer(bytes)], { type: mime }),
 	});
 	await navigator.clipboard.write([item]);
 };

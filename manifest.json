@@ -2,7 +2,7 @@
 	"id": "image-baker",
 	"name": "Image Baker",
 	"version": "1.0.1",
-	"minAppVersion": "1.6.0",
+	"minAppVersion": "1.7.2",
 	"description": "Bake images into your notes as self-contained Base64 embeds, and extract them back into vault files at any time.",
 	"author": "bartekmp",
 	"authorUrl": "https://github.com/bartekmp",

@@ -69,7 +69,8 @@ class Base64FoldWidget extends WidgetType {
 	}
 
 	override toDOM(view: EditorView): HTMLElement {
-		const pill = document.createElement("span");
+		// The editor's own document, so pills render correctly in popouts.
+		const pill = view.dom.ownerDocument.createElement("span");
 		pill.className = "image-baker-fold";
 		pill.textContent = `base64 · ${this.label}`;
 		pill.setAttribute("title", "Click to expand the embedded image data");

@@ -1,3 +1,4 @@
+import { toArrayBuffer } from "../lib/bytes";
 import type { ImageBakerSettings } from "../settings";
 
 /**
@@ -17,15 +18,15 @@ const OPTIMIZABLE_MIMES = new Set([
  * possible. `quality` is in the 0..1 range.
  */
 export type Reencoder = (
-	bytes: Uint8Array<ArrayBuffer>,
+	bytes: Uint8Array,
 	sourceMime: string,
 	targetMime: string,
 	quality: number,
 	maxWidth: number,
-) => Promise<Uint8Array<ArrayBuffer> | null>;
+) => Promise<Uint8Array | null>;
 
 export interface OptimizedImage {
-	bytes: Uint8Array<ArrayBuffer>;
+	bytes: Uint8Array;
 	mime: string;
 	changed: boolean;
 }
@@ -39,12 +40,12 @@ export const canvasReencode: Reencoder = async (
 	maxWidth,
 ) => {
 	const bitmap = await createImageBitmap(
-		new Blob([bytes], { type: sourceMime }),
+		new Blob([toArrayBuffer(bytes)], { type: sourceMime }),
 	);
 	try {
 		const scale =
 			maxWidth > 0 && bitmap.width > maxWidth ? maxWidth / bitmap.width : 1;
-		const canvas = document.createElement("canvas");
+		const canvas = activeDocument.createElement("canvas");
 		canvas.width = Math.max(1, Math.round(bitmap.width * scale));
 		canvas.height = Math.max(1, Math.round(bitmap.height * scale));
 		const context = canvas.getContext("2d");
@@ -72,7 +73,7 @@ export const canvasReencode: Reencoder = async (
  * any re-encoding failure falls back to the unchanged input.
  */
 export async function optimizeImage(
-	bytes: Uint8Array<ArrayBuffer>,
+	bytes: Uint8Array,
 	mime: string,
 	settings: ImageBakerSettings,
 	reencode: Reencoder = canvasReencode,
@@ -86,7 +87,7 @@ export async function optimizeImage(
 		settings.optimizeFormat === "jpeg" ? "image/jpeg" : "image/webp";
 	const quality =
 		Math.min(100, Math.max(1, settings.optimizeQuality)) / 100;
-	let optimized: Uint8Array<ArrayBuffer> | null;
+	let optimized: Uint8Array | null;
 	try {
 		optimized = await reencode(
 			bytes,

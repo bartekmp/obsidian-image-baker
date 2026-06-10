@@ -6,6 +6,7 @@ import {
 	type FileManager,
 } from "obsidian";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
+import { toArrayBuffer } from "../lib/bytes";
 import {
 	generateImageFilename,
 	imagePathFromAlt,
@@ -213,7 +214,7 @@ export async function embedImages(
 		}
 		try {
 			const data = await app.vault.readBinary(file);
-			let payload = new Uint8Array(data);
+			let payload: Uint8Array = new Uint8Array(data);
 			let payloadMime = mime;
 			// The full path is recorded so extraction can restore the file
 			// to the folder it came from.
@@ -331,7 +332,7 @@ export async function extractImages(
 		try {
 			const bytes = base64ToBytes(image.base64);
 			const path = await extractionPath(app, storedPath, filename, note);
-			const created = await app.vault.createBinary(path, bytes.buffer);
+			const created = await app.vault.createBinary(path, toArrayBuffer(bytes));
 			const linkpath =
 				settings.linkStyle === "wiki"
 					? app.metadataCache.fileToLinktext(created, note.path)

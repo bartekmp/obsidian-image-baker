@@ -5,7 +5,7 @@ import {
 	mimeFromExtension,
 } from "./mime";
 
-// eslint-disable-next-line no-control-regex
+// eslint-disable-next-line no-control-regex -- control characters are matched on purpose to strip them from file names
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|\u0000-\u001f]/g;
 
 /** Strips characters that are not allowed in vault file names. */

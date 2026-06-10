@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import obsidianmd from "eslint-plugin-obsidianmd";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -7,6 +8,18 @@ export default tseslint.config(
 	},
 	js.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
+	// The obsidianmd/* rules the community plugin review runs, scoped to
+	// the plugin sources (the full recommended preset would re-add its own
+	// copies of the eslint and typescript-eslint baselines).
+	{
+		files: ["src/**/*.ts"],
+		plugins: { obsidianmd },
+		rules: Object.fromEntries(
+			obsidianmd.configs.recommended
+				.flatMap((config) => Object.entries(config.rules ?? {}))
+				.filter(([name]) => name.startsWith("obsidianmd/")),
+		),
+	},
 	{
 		languageOptions: {
 			parserOptions: {

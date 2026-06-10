@@ -25,7 +25,7 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Collapse embedded image data")
 			.setDesc(
-				"Fold the long Base64 text of baked images behind a small size pill in the editor. Click a pill to expand it.",
+				"Fold the long base64 text of baked images behind a small size pill in the editor. Click a pill to expand it.",
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -39,7 +39,7 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Embed images on paste")
 			.setDesc(
-				"Bake pasted images (e.g. screenshots) directly into the note instead of creating attachment files.",
+				"Bake pasted images such as screenshots directly into the note instead of creating attachment files.",
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -79,8 +79,10 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Maximum file size to embed (KB)")
-			.setDesc("Images larger than this are skipped. Use 0 for no limit.")
+			.setName("Maximum file size to embed")
+			.setDesc(
+				"In kilobytes. Images larger than this are skipped. Use 0 for no limit.",
+			)
 			.addText((text) =>
 				text
 					.setPlaceholder("0")
@@ -128,7 +130,6 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 			.addSlider((slider) =>
 				slider
 					.setLimits(1, 100, 1)
-					.setDynamicTooltip()
 					.setValue(this.plugin.settings.optimizeQuality)
 					.onChange(async (value) => {
 						this.plugin.settings.optimizeQuality = value;
@@ -172,7 +173,7 @@ export class ImageBakerSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Log level")
-			.setDesc("How much Image Baker reports to the developer console.")
+			.setDesc("How much the plugin reports to the developer console.")
 			.addDropdown((dropdown) => {
 				for (const level of LOG_LEVELS) {
 					dropdown.addOption(level, LOG_LEVEL_LABELS[level]);

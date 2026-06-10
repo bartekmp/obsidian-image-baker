@@ -1,3 +1,13 @@
+/**
+ * Copies the bytes into a plain ArrayBuffer, for APIs (Blob, createBinary)
+ * that reject views over a possibly shared buffer.
+ */
+export function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+	const copy = new ArrayBuffer(bytes.byteLength);
+	new Uint8Array(copy).set(bytes);
+	return copy;
+}
+
 /** Approximate decoded size of a Base64 payload of the given length. */
 export function approximateBase64Bytes(payloadLength: number): number {
 	return Math.floor((payloadLength * 3) / 4);
