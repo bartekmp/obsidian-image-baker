@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.1...1.0.2) (2026-06-10)
+
+
+### Bug Fixes
+
+* apply Obsidian review suggestions ([e1c9874](https://github.com/bartekmp/obsidian-image-baker/commit/e1c987480b157738545cffd4d5c22bed898ac600))
+
 ## [1.0.1](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.0...1.0.1) (2026-06-10)
 
 

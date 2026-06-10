@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-image-baker",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "Obsidian plugin that bakes images into notes as self-contained Base64 embeds and extracts them back into vault files.",
 	"main": "main.js",
 	"type": "module",
