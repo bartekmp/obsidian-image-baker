@@ -1,3 +1,36 @@
+# 1.0.0 (2026-06-10)
+
+
+### Bug Fixes
+
+* discard stale sidebar refreshes ([946cf41](https://github.com/bartekmp/obsidian-image-baker/commit/946cf41cb00dcac5d8003e895e71b4ee7f88d1b7))
+* drop jenkins option requiring the timestamper plugin ([5a1f855](https://github.com/bartekmp/obsidian-image-baker/commit/5a1f8558892af51e396b88acf3a3747053337c93))
+* extract pasted images next to their note ([b63746a](https://github.com/bartekmp/obsidian-image-baker/commit/b63746a46f4289da04b9b3e95de0c1e3cef6544f))
+* place and surface image menu actions correctly ([39fbb3d](https://github.com/bartekmp/obsidian-image-baker/commit/39fbb3d56b9211494c3b1f1c2358a2e633c11efe))
+
+
+### Features
+
+* act on the image selected in the editor ([1aa1b31](https://github.com/bartekmp/obsidian-image-baker/commit/1aa1b318a3c4bfdbaa87e1be19b00de5058f7550))
+* add batch embed and extract across vault or folder ([025456b](https://github.com/bartekmp/obsidian-image-baker/commit/025456b83c6e77cd598eb26a22265db836af60ca))
+* add convert buttons to the image list sidebar ([df0fd20](https://github.com/bartekmp/obsidian-image-baker/commit/df0fd2010f784fd6a627822065d8792af0ce2d00))
+* add image embed and extract engine ([318953b](https://github.com/bartekmp/obsidian-image-baker/commit/318953bbc54c6a04d99e7e1c648840f95c58376a))
+* add image list sidebar view ([5e95716](https://github.com/bartekmp/obsidian-image-baker/commit/5e957168e19c87aae86b2397fc0d853ad12534bb))
+* add plugin commands, context menu, and settings tab ([a75851f](https://github.com/bartekmp/obsidian-image-baker/commit/a75851f51b435f4b2e9a1c306f3bcd25f43d2a0d))
+* add selection scope and clipboard menu entries ([85a2444](https://github.com/bartekmp/obsidian-image-baker/commit/85a244482db4e1d64797c3973347e50b4187adda))
+* bake images directly on paste and drop ([982c2c8](https://github.com/bartekmp/obsidian-image-baker/commit/982c2c842279232e32a374f82d67d679a5f94baf))
+* copy baked images to the clipboard ([734611f](https://github.com/bartekmp/obsidian-image-baker/commit/734611fc37017a95cb983e6416aafb9305ba63dc))
+* default the embed size limit to 1 MB ([d3d9b4a](https://github.com/bartekmp/obsidian-image-baker/commit/d3d9b4a8fcacd613e8e82fe4d76ca211e9f9525a))
+* delete a baked image from its context menu ([ef26999](https://github.com/bartekmp/obsidian-image-baker/commit/ef2699940b3af432ff5ad71ef531d3eb26945bf7))
+* embed an image from the file explorer menu ([27cdbf5](https://github.com/bartekmp/obsidian-image-baker/commit/27cdbf50400381586608443b4a695152680c3592))
+* embed or extract a note's images from the file explorer ([8e27602](https://github.com/bartekmp/obsidian-image-baker/commit/8e276025e736bd5e9048cad946e05cde139a2c82))
+* extract baked images from the reading view menu ([799b161](https://github.com/bartekmp/obsidian-image-baker/commit/799b161a8f2576298a25a4afd2ce877710e687ac))
+* fold embedded image data behind a size pill ([4902ecc](https://github.com/bartekmp/obsidian-image-baker/commit/4902ecc464ebefd498bb5364bb2262be23759df7))
+* multi-select and batch convert in the image sidebar ([7008a7d](https://github.com/bartekmp/obsidian-image-baker/commit/7008a7d2cfc64e3547a09dcbb11f8168d43eb031))
+* optionally optimize images before embedding ([4e69720](https://github.com/bartekmp/obsidian-image-baker/commit/4e69720bac7c7df5a489918153d072122a3c46f3))
+* restore extracted images to their original folder ([b4db614](https://github.com/bartekmp/obsidian-image-baker/commit/b4db614acf81f5f03c98a1ab9fc5d9f8559dab8e))
+* setup 1.0.0 release ([5eb7d8c](https://github.com/bartekmp/obsidian-image-baker/commit/5eb7d8c0e79632076459fb439a8457395541d74b))
+
 # Changelog
 
 All notable changes to this project are documented in this file.
