@@ -1,11 +1,9 @@
 // Mirrors the GitHub Actions CI pipeline (.github/workflows/ci.yml) and
 // additionally packages a ready-to-deploy plugin bundle as a build artifact.
 //
-// Triggering: manual for now. Once the GitHub repository is configured,
-// trigger this job on PR merge events via a webhook (GitHub plugin):
-//   triggers { githubPush() }
-// plus a "Push" + "Pull request merged" webhook on the repository pointing
-// at <jenkins-url>/github-webhook/.
+// Runs on a Jenkins multibranch pipeline that discovers main and pull
+// requests from GitHub; events arrive through a webhook relay, with a
+// periodic scan as fallback.
 //
 // The commitlint job from the GitHub Actions workflow is intentionally not
 // replicated here: it validates pull request commit ranges, which only exist
