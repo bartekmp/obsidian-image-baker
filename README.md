@@ -72,6 +72,14 @@ where you started. Try it on one note or convert a whole vault, with a dry-run p
   notes.
 - Every operation is logged to the developer console at a configurable level (settings →
   *Log level*), so unexpected behavior is easy to diagnose.
+- **The vault-wide file list is only read for batch runs** — opening a batch dialog enumerates
+  markdown files so it can show you the dry-run summary, filtered to the folder you pick.
+  Every other command works on the active note alone.
+- **The clipboard is write-only** — *Copy image to clipboard* is the only thing that touches it,
+  and it only ever writes. The plugin never reads your clipboard; pasting hands it the image
+  from the paste event you just triggered.
+- **No network access** — nothing is uploaded, fetched, or phoned home; images are converted
+  locally in the renderer.
 
 ## Settings
 
@@ -117,6 +125,14 @@ Download `main.js`, `manifest.json`, and `styles.css` from the
 [latest release](https://github.com/bartekmp/obsidian-image-baker/releases) and place them in
 `<your vault>/.obsidian/plugins/image-baker/`, then enable the plugin in
 **Settings → Community plugins**.
+
+Release builds carry [GitHub artifact attestations](https://docs.github.com/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds),
+so you can verify a download was built by this repository's release workflow before trusting it:
+
+```bash
+gh attestation verify main.js --repo bartekmp/obsidian-image-baker
+gh attestation verify styles.css --repo bartekmp/obsidian-image-baker
+```
 
 ## Developing
 
