@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.2...1.1.0) (2026-08-19)
+
+
+### Features
+
+* attest release build provenance ([#13](https://github.com/bartekmp/obsidian-image-baker/issues/13)) ([6853ac8](https://github.com/bartekmp/obsidian-image-baker/commit/6853ac840865a607b03ceb91f7e3ba6928b1334c))
+
 ## [1.0.2](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.1...1.0.2) (2026-06-10)
 
 
