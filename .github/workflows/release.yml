@@ -8,10 +8,13 @@ on:
   push:
     branches: [main]
 
-# All writes go through the RELEASE_TOKEN PAT; the default GITHUB_TOKEN
-# is unused and gets no write access.
+# Releases are written with the RELEASE_TOKEN PAT. The default GITHUB_TOKEN
+# gets no write access to the repository itself; the two extra scopes below
+# are only what actions/attest-build-provenance needs to mint an attestation.
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 concurrency:
   group: release
@@ -48,6 +51,18 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Signed provenance for the two build outputs, so anyone can check a
+      # download really came from this workflow: `gh attestation verify
+      # main.js --repo bartekmp/obsidian-image-baker`. manifest.json is not
+      # covered: semantic-release rewrites its version below, so its digest
+      # here is not the one that gets published.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            main.js
+            styles.css
 
       - name: Release
         env:
