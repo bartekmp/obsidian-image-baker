@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/bartekmp/obsidian-image-baker/compare/1.1.0...1.1.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* update dev dependencies to their latest versions ([#18](https://github.com/bartekmp/obsidian-image-baker/issues/18)) ([7688672](https://github.com/bartekmp/obsidian-image-baker/commit/7688672726dc12f484aa4e71fa648dbe49303df6))
+
 # [1.1.0](https://github.com/bartekmp/obsidian-image-baker/compare/1.0.2...1.1.0) (2026-08-19)
 
 
