@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/bartekmp/obsidian-image-baker/compare/1.1.1...1.1.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* bump vitest to 5.x and semantic-release to 25.x ([#22](https://github.com/bartekmp/obsidian-image-baker/issues/22)) ([f377d84](https://github.com/bartekmp/obsidian-image-baker/commit/f377d84d9994565b8fec96b15c6c20b0bb90a99d))
+
 ## [1.1.1](https://github.com/bartekmp/obsidian-image-baker/compare/1.1.0...1.1.1) (2026-09-05)
 
 
