@@ -23,9 +23,9 @@ updates:
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
-    # Keep commitlint happy on dependabot PRs.
+    # "fix" so the merge cuts a patch release; "build" releases nothing.
     commit-message:
-      prefix: "build"
+      prefix: "fix"
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -36,4 +36,4 @@ updates:
       actions:
         patterns: ["*"]
     commit-message:
-      prefix: "ci"
+      prefix: "fix"
