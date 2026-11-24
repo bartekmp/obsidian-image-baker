@@ -17,6 +17,10 @@ updates:
       dev-dependencies:
         patterns: ["*"]
     ignore:
+      # obsidian pins exact @codemirror/* peers that lag behind codemirror's
+      # own releases, so dependabot can only ever propose a version npm will
+      # refuse. Bump these by hand when an obsidian update changes its peers.
+      - dependency-name: "@codemirror/*"
       # typescript-eslint supports TypeScript < 6.1 only; stay on ~6.0.x
       # until the support range moves.
       - dependency-name: "typescript"
