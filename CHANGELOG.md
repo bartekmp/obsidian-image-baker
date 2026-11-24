@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/bartekmp/obsidian-image-baker/compare/1.1.2...1.1.3) (2026-11-24)
+
+
+### Bug Fixes
+
+* clear the dependabot backlog and group its updates better ([#26](https://github.com/bartekmp/obsidian-image-baker/issues/26)) ([437ea6d](https://github.com/bartekmp/obsidian-image-baker/commit/437ea6d9ebe4226063f16853554ef49c7c2d8237))
+
 ## [1.1.2](https://github.com/bartekmp/obsidian-image-baker/compare/1.1.1...1.1.2) (2026-10-28)
 
 
