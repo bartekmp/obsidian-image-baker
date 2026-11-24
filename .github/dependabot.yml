@@ -6,14 +6,17 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 3
-    # One combined PR per week for routine bumps; only majors arrive alone.
     groups:
-      minor-and-patch:
+      # obsidian declares exact @codemirror/* peers, so these three have to
+      # move in the same PR or npm refuses to install the result.
+      obsidian:
+        patterns:
+          - "obsidian"
+          - "@codemirror/*"
+      # Everything else, majors included, arrives as one PR per week.
+      dev-dependencies:
         patterns: ["*"]
-        update-types: ["minor", "patch"]
     ignore:
-      # Pinned to the exact versions the obsidian package declares as peers.
-      - dependency-name: "@codemirror/*"
       # typescript-eslint supports TypeScript < 6.1 only; stay on ~6.0.x
       # until the support range moves.
       - dependency-name: "typescript"

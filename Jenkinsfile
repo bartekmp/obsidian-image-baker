@@ -9,7 +9,7 @@
 // replicated here: it validates pull request commit ranges, which only exist
 // in the PR-triggered context.
 pipeline {
-    agent any
+    agent { label 'main' }
 
     options {
         disableConcurrentBuilds()
